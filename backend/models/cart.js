@@ -1,14 +1,13 @@
-const mongoose = require('mongoose');
-
+const mongoose = require('mongoose')
 const cartSchema = new mongoose.Schema({
-  userid: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     required: true
   },
   books: [
     {
-      bookid: {
+      book: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'books',
         required: true
@@ -18,25 +17,12 @@ const cartSchema = new mongoose.Schema({
         required: true,
         min: 1
       },
-      price: {
+      priceAtAdded: {
         type: Number,
         required: true
-      },
-      title: {
-        type: String
-      },
-      desc: {
-        type: String
-      },
-      author: {
-        type: String
-      },
-      category:{
-        type:String
       }
     }
   ]
 }, { timestamps: true });
 
-
-module.exports = mongoose.models.Cart || mongoose.model('Cart', cartSchema);
+module.exports = mongoose.models.cart || mongoose.model('cart', cartSchema);

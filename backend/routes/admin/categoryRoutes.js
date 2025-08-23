@@ -3,6 +3,6 @@ const router=express.Router()
 const{addCategory}=require('../../controllers/admin/categoryControllers')
 const {authenticateToken}=require('../../middleware/useAuth')
 
-router.post('/add-category',authenticateToken,addCategory)
+router.post('/',authenticateToken,addCategory)
 
 module.exports=router

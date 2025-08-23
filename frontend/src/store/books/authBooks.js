@@ -1,16 +1,17 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
+import axios from 'axios'
 export const fetchBooks = createAsyncThunk(
   "books/fetchBooks",
-  async ({ page = 1, limit = 8 }, thunkAPI) => {
+  async ({ page = 1, limit = 12 }, thunkAPI) => {
+
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/books/get-all-books?page=${page}&limit=${limit}`
+        `${import.meta.env.VITE_BACKEND_URL}/api/books`,
+        { params: { page, limit } }
       );
-      
+
       return {
-        books: response.data.data.books,           // 🟡 FIX: response nesting
+        books: response.data.data.books,
         currentPage: response.data.data.currentPage,
         totalPages: response.data.data.totalPages,
         totalBooks: response.data.data.totalBooks

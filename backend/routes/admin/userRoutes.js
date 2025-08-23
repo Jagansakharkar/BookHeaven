@@ -1,11 +1,17 @@
 const express = require('express')
-const {authenticateToken} = require("../../middleware/useAuth")
+const { authenticateToken } = require("../../middleware/useAuth")
 const router = express.Router()
-const { getAllCustomers, getCustomerById,userSearch ,filterByGender} = require('../../controllers/admin/userControllers')
+const { userSearch, filterByGender,deleteUser, getUserById, getAllUsers } = require('../../controllers/admin/userControllers')
 
-router.get("/get-all-customers", authenticateToken, getAllCustomers)
-router.get('/get-customer-byId/:customerid', authenticateToken, getCustomerById)
-router.get('/user-search',authenticateToken,userSearch)
-router.post('/filter-by-gender',filterByGender)
+// get all users
+router.get("/", authenticateToken, getAllUsers)
+// user by id
+router.get('/:userId', authenticateToken, getUserById)
+// search customer
+router.get('/search', authenticateToken, userSearch)
+// filter by gender
+router.post('/filter-gender', filterByGender)
+//delete user
+router.delete('/:userId',authenticateToken,deleteUser)
 
-module.exports=router
+module.exports = router

@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BackButton } from '../../Components/common/BackButton';
+import  BackButton  from '../../Components/common/BackButton';
+import { useFetchCustomers, useUpdateCustomer } from '../../hooks/customers';
+import { useUpdateBook } from '../../hooks/Book';
 
-import { useSelector } from 'react-redux';
 
-export const EditCustomer = () => {
+const EditCustomer = () => {
   const { customerid } = useParams();
   const navigate = useNavigate();
-  const { userid, token } = useSelector(state => state.auth);
-
+  const { mutate: fetchCustomer, isLoading, isError, error } = useFetchCustomers()
+  const { mutate: updateCustomer } = useUpdateCustomer()
   const [customerData, setCustomerData] = useState({
     fullname: '',
     username: '',
@@ -29,38 +30,42 @@ export const EditCustomer = () => {
     }
   });
 
-  const headers = {
-    userid,
-    authorization: `Bearer ${token}`
-  };
-
   useEffect(() => {
-    const fetchCustomer = async () => {
+    const fetchCustomers = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/admin/user/get-customer-byId/${customerid}`, { headers });
-        const data = response.data.data[0];
-
-        const formattedDate = data.BirthDate
-          ? new Date(data.BirthDate).toISOString().split('T')[0]
-          : '';
-
-        setCustomerData({
-          fullname: data.fullname || '',
-          username: data.username || '',
-          email: data.email || '',
-          password: '',
-          avatar: data.avatar || '',
-          role: data.role || 'user',
-          BirthDate: formattedDate,
-          gender: data.gender || '',
-          address: {
-            phone: data.address?.phone || '',
-            street: data.address?.street || '',
-            city: data.address?.city || '',
-            state: data.address?.state || '',
-            pincode: data.address?.pincode || ''
+        fetchCustomer(customerid,
+          {
+            onSuccess: (response) => {
+              const formattedDate = response.BirthDate
+                ? new Date(data.BirthDate).toISOString().split('T')[0]
+                : '';
+              setCustomerData({
+                fullname: data.fullname || '',
+                username: data.username || '',
+                email: data.email || '',
+                password: '',
+                avatar: data.avatar || '',
+                role: data.role || 'user',
+                BirthDate: formattedDate,
+                gender: data.gender || '',
+                address: {
+                  phone: data.address?.phone || '',
+                  street: data.address?.street || '',
+                  city: data.address?.city || '',
+                  state: data.address?.state || '',
+                  pincode: data.address?.pincode || ''
+                }
+              });
+            },
+            onError: (response) => {
+              Swal.fire({
+                icon: 'error',
+                title: 'Failed to fetch customer',
+                text: err.message
+              });
+            }
           }
-        });
+        )
       } catch (err) {
         Swal.fire({
           icon: 'error',
@@ -70,7 +75,7 @@ export const EditCustomer = () => {
       }
     };
 
-    fetchCustomer();
+    fetchCustomers();
   }, [customerid, headers]);
 
   const handleChange = (e) => {
@@ -96,16 +101,20 @@ export const EditCustomer = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(
-        `http://localhost:3000/api/admin/update-customer`,
-        { ...customerData, customerid },
-        { headers }
-      );
-      Swal.fire({
-        icon: res.data.success ? 'success' : 'error',
-        text: res.data.message
-      });
-      if (res.data.success) navigate(-1);
+
+      updateCustomer(customerid, customerData, {
+        onSuccess: (response) => {
+          Swal.fire({
+            icon: res.data.success ? 'success' : 'error',
+            text: res.data.message
+          });
+          if (res.data.success) navigate(-1);
+        },
+        onError: (response) => {
+          Swal.fire({ icon: 'error', text: error.message });
+
+        }
+      })
     } catch (error) {
       Swal.fire({ icon: 'error', text: error.message });
     }
@@ -291,3 +300,4 @@ export const EditCustomer = () => {
     </div>
   );
 };
+export default EditCustomer

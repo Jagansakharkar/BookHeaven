@@ -3,31 +3,36 @@ import { Link } from 'react-router-dom';
 
 export const Hero = () => {
   return (
-    <section className="relative bg-gray-800 py-20 px-6 text-center overflow-hidden text-white">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-          Unlock Your Next Great Read
-        </h2>
-        <p className="text-lg text-gray-300 mb-8">
-          Discover handpicked books from every genre — curated just for you.
-        </p>
-        <Link to="/all-books">
-          <button className="bg-indigo-700 text-white px-6 py-3 rounded-full text-lg hover:bg-indigo-800 transition duration-300">
-            Discover Books
-          </button>
-        </Link>
-      </div>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 py-16 px-6">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
+        <div className="md:w-1/2 space-y-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+            Discover Your Next <span className="text-blue-600">Favorite Book</span>
+          </h1>
+          <p className="text-xl text-gray-600">
+            Explore our curated collection of 50,000+ books. Find bestsellers, new releases, and personalized recommendations just for you.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <Link
+              to="/all-books"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-center font-medium transition-all duration-300 hover:shadow-lg"
+            >
+              Browse Collection
+            </Link>
 
-      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 hidden md:block opacity-10">
-        <img
-          src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80"
-          alt="Books"
-          className="h-96 rounded-lg"
-        />
+          </div>
+
+        </div>
+        <div className="md:w-1/2 relative">
+          <img
+            src="https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+            alt="Stack of books with a cozy reading atmosphere"
+            className="rounded-xl shadow-xl w-full object-cover h-96"
+          />
+
+        </div>
       </div>
-    </section>
+    </div>
+
   );
 };
-
-
-

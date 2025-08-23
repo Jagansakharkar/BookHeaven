@@ -1,16 +1,21 @@
+// Code fixed without altering UI
 import axios from "axios";
-import React, { useState, useEffect } from "react";
-import { Loader } from "../../Components/common/Loader";
-import { BookCard } from "../../Components/common/BookCard";
-import { CiSearch } from "react-icons/ci";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import Loader from "../../Components/common/Loader";
+import BookCard from "../../Components/common/BookCard";
+import { CiSearch, CiFilter } from "react-icons/ci";
+import { FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBooks } from "../../store/books/authBooks";
 import { setPage } from "../../store/books/booksSlice";
-import { fetchCategories } from "../../store/categories/categoryThunks"; 
+import { fetchCategories } from "../../store/categories/categoryThunks";
+import { debounce } from "lodash";
+import { useBookFilter, useBookSearch } from "../../hooks/Book";
 
-export const AllBooks = () => {
+const AllBooks = () => {
   const dispatch = useDispatch();
-
+  const [filteredPage, setFilteredPage] = useState(1);
+  const limit = 12;
   const { loading, currentPage, totalPages, books } = useSelector(
     (state) => state.book
   );
@@ -18,235 +23,489 @@ export const AllBooks = () => {
   const { categories, loading: catLoading } = useSelector(
     (state) => state.categories
   );
-
+ 
   const [priceRange, setPriceRange] = useState(10000);
   const [filtered, setFiltered] = useState(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
   const [sortType, setSortType] = useState("all");
+  const [error, setError] = useState(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const { mutate: filterBook } = useBookFilter()
+  const { mutate: bookSearch } = useBookSearch()
 
   useEffect(() => {
-    if (!filtered) dispatch(fetchBooks({ page: currentPage, limit: 8 }));
-  }, [dispatch, currentPage, filtered]);
+    dispatch(fetchBooks({ page: 1, limit: 12 }));
+    dispatch(fetchCategories());
+  }, []);
 
+  const applyFilters = useCallback(
+    async (cats, sort, max = priceRange, page = 1, limit = 12) => {
+      try {
+        setError(null);
+        const params = new URLSearchParams();
 
-  const applyFilters = async (cats, sort, max = priceRange) => {
-    try {
-      const params = new URLSearchParams();
-      if (cats.length > 0) params.append("categories", cats.join(","));
-      if (sort !== "all") params.append("sort", sort);
-      if (max) {
+        if (cats.length > 0) {
+          params.append("categories", cats.join(","));
+        }
+
+        if (sort !== "all") params.append("sort", sort);
         params.append("min", 0);
         params.append("max", max);
+        params.append("page", page);
+        params.append("limit", limit);
+
+        filterBook(params, {
+          onSuccess: (response) => {
+            setFiltered({
+              books: response.data,
+              currentPage: response.currentPage,
+              totalPages: response.totalPages,
+            });
+          },
+          onError: (response) => {
+            setError("Failed to apply filters. Please try again.");
+            setFiltered({ books: [], currentPage: 1, totalPages: 1 });
+          }
+        })
+
+      } catch (err) {
+        setError("Failed to apply filters. Please try again.");
+        setFiltered({ books: [], currentPage: 1, totalPages: 1 });
       }
+    },
+    [priceRange]
+  );
 
-      const url = `http://localhost:3000/api/books/books_filter?${params.toString()}`;
-      const res = await axios.get(url);
+  const display = useMemo(() => {
+    if (filtered && Array.isArray(filtered.books)) return filtered.books;
+    return Array.isArray(books) ? books : [];
+  }, [filtered, books]);
 
-      const result = Array.isArray(res.data.data) ? res.data.data : [];
-      setFiltered(result);
-    } catch (err) {
-      console.error("Filter error:", err);
-      setFiltered([]);
+  useEffect(() => {
+    if (selected.length || sortType !== "all" || priceRange !== 10000) {
+      applyFilters(selected, sortType, priceRange, filteredPage, limit);
+    } else {
+      setFiltered(null);
     }
-  };
+  }, [selected, sortType, priceRange, filteredPage, applyFilters]);
 
-  const toggleCategory = (category) => {
-    const next = selected.includes(category)
-      ? selected.filter((c) => c !== category)
-      : [...selected, category];
-    setSelected(next);
-    applyFilters(next, sortType);
-  };
-
-  const handleSortChange = (e) => {
-    const sort = e.target.value;
-    setSortType(sort);
-    applyFilters(selected, sort);
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!search.trim()) return;
-
+  const debouncedSearch = useMemo(() => debounce(async (query) => {
+    if (!query.trim()) {
+      setFiltered(null);
+      return;
+    }
     try {
-      const res = await axios.get(
-        `http://localhost:3000/api/books/search?query=${search.trim()}`
-      );
-      const result = Array.isArray(res.data.data) ? res.data.data : [];
-      setFiltered(result);
+
+      bookSearch(query,
+        {
+          onSuccess: (response) => {
+            setFiltered({ books: res.data, currentPage: 1, totalPages: 1 });
+          },
+          onError: (response) => {
+            setError("Failed to search books. Please try again.");
+            setFiltered({ books: [], currentPage: 1, totalPages: 1 });
+          }
+        }
+      )
     } catch (err) {
-      setFiltered([]);
+      setError("Failed to search books. Please try again.");
+      setFiltered({ books: [], currentPage: 1, totalPages: 1 });
     }
+  }, 500), []);
+
+  const toggleCategory = useCallback((categoryId) => {
+    setSelected((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  }, []);
+
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    debouncedSearch(search);
   };
 
-  const handlePrev = () => {
-    if (currentPage > 1) dispatch(setPage(currentPage - 1));
-  };
+  const handlePriceChange = (e) => setPriceRange(parseInt(e.target.value));
 
-  const handleNext = () => {
-    if (currentPage < totalPages) dispatch(setPage(currentPage + 1));
-  };
+  const resetPriceRange = () => setPriceRange(10000);
 
   const clearFilters = () => {
     setFiltered(null);
+    setFilteredPage(1);
     setSelected([]);
     setSortType("all");
     setSearch("");
+    setPriceRange(10000);
+    setError(null);
   };
 
-  const display = Array.isArray(filtered)
-    ? filtered
-    : Array.isArray(books)
-      ? books
-      : [];
+  const handlePrev = () => {
+    if (filtered && filtered.currentPage > 1) setFilteredPage(p => p - 1);
+    else if (!filtered && currentPage > 1) dispatch(setPage(currentPage - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNext = () => {
+    if (filtered && filtered.currentPage < filtered.totalPages) setFilteredPage(p => p + 1);
+    else if (!filtered && currentPage < totalPages) dispatch(setPage(currentPage + 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSortChange = (e) => setSortType(e.target.value);
 
   return (
-    <div className="bg-zinc-900 min-h-screen px-4 sm:px-6 md:px-12 py-8 text-white">
-      <h1 className="text-3xl font-bold text-yellow-100 text-center mb-10">
-        All Books
-      </h1>
+    <main className="bg-gradient-to-b from-gray-900 to-gray-800 min-h-screen px-4 sm:px-6 lg:px-8 py-8 text-white">
+      <section className="max-w-8xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 mb-4">
+            Explore Our Collection
+          </h1>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Discover your next favorite book from our carefully curated selection
+          </p>
+        </div>
 
-      {/* Controls */}
-      <div className="max-w-6xl mx-auto flex flex-col gap-8 md:flex-row md:justify-between md:items-start mb-10">
-        {/* Search */}
-        <form onSubmit={handleSearch} className="flex w-full md:w-1/2 gap-3">
-          <input
-            type="text"
-            className="flex-grow px-4 py-3 rounded-md text-black shadow-md border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            placeholder="Search for books..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        {/* Mobile Filter Button */}
+        <div className="lg:hidden mb-6">
           <button
-            type="submit"
-            className="bg-yellow-400 hover:bg-yellow-500 transition px-4 py-3 rounded-md"
+            onClick={() => setMobileFiltersOpen(true)}
+            className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg w-full justify-center"
           >
-            <CiSearch className="h-6 w-6" />
+            <CiFilter className="text-xl" />
+            <span>Filters</span>
           </button>
-        </form>
+        </div>
 
-        {/* Filters & Sort */}
-        <div className="bg-zinc-800 p-6 rounded-lg shadow-md w-full md:w-1/2 space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2 text-yellow-200">
-              Filter by Categories
-            </h3>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/30 text-red-300 rounded-lg text-center">
+            {error}
+          </div>
+        )}
 
-            {catLoading ? (
-              <p className="text-sm text-zinc-400">Loading categories...</p>
-            ) : (
-              <div className="flex flex-wrap gap-4">
-                {categories.map((cat) => (
-                  <label
-                    key={cat._id}
-                    className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer"
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Desktop Filters */}
+          <aside className="hidden lg:block w-72 flex-shrink-0">
+            <div className="bg-gray-800 p-6 rounded-xl shadow-lg sticky top-4">
+              {/* Search */}
+              <form onSubmit={handleSearch} className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    placeholder="Search books..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-3 text-gray-400 hover:text-yellow-400"
                   >
+                    <CiSearch className="text-xl" />
+                  </button>
+                </div>
+              </form>
+
+              {/* Categories */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                  Categories
+                </h3>
+                {catLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-6 bg-gray-700 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {categories.map((cat) => (
+                      <label key={cat._id} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(cat._id)}
+                          onChange={() => toggleCategory(cat._id)}
+                          className="w-4 h-4 rounded border-gray-600 text-yellow-500 focus:ring-yellow-500 bg-gray-700"
+                        />
+                        <span className="text-gray-300 hover:text-white">
+                          {cat.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Price Range */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                  Price Range
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm text-gray-300">
+                    <span>₹0</span>
+                    <span>₹{priceRange.toLocaleString()}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10000"
+                    step="200"
+                    value={priceRange}
+                    onChange={handlePriceChange}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                  />
+                  <button
+                    onClick={resetPriceRange}
+                    className="text-sm text-yellow-400 hover:text-yellow-300"
+                  >
+                    Reset Price
+                  </button>
+                </div>
+              </div>
+
+              {/* Sort */}
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                  Sort By
+                </h3>
+                <select
+                  value={sortType}
+                  onChange={handleSortChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                >
+                  <option value="all">Default</option>
+                  <option value="lowToHigh">Price: Low to High</option>
+                  <option value="highToLow">Price: High to Low</option>
+                </select>
+              </div>
+            </div>
+          </aside>
+
+          {/* Mobile Filters */}
+          {mobileFiltersOpen && (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex justify-end">
+              <div className="bg-gray-800 w-4/5 max-w-sm h-full overflow-y-auto p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-yellow-400">Filters</h2>
+                  <button
+                    onClick={() => setMobileFiltersOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <FiX className="text-2xl" />
+                  </button>
+                </div>
+
+                {/* Mobile Filter Content */}
+                <form onSubmit={handleSearch} className="mb-6">
+                  <div className="relative">
                     <input
-                      type="checkbox"
-                      checked={selected.includes(cat.name)}
-                      onChange={() => toggleCategory(cat.name)}
-                      className="accent-yellow-400 w-4 h-4"
+                      type="text"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="Search books..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
                     />
-                    <span>{cat.name}</span>
-                  </label>
+                    <button
+                      type="submit"
+                      className="absolute right-3 top-3 text-gray-400 hover:text-yellow-400"
+                    >
+                      <CiSearch className="text-xl" />
+                    </button>
+                  </div>
+                </form>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                    Categories
+                  </h3>
+                  <div className="space-y-2">
+                    {categories.map((cat) => (
+                      <label key={cat._id} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(cat._id)}
+                          onChange={() => toggleCategory(cat._id)}
+                          className="w-4 h-4 rounded border-gray-600 text-yellow-500 focus:ring-yellow-500 bg-gray-700"
+                        />
+                        <span className="text-gray-300 hover:text-white">
+                          {cat.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                    Price Range
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-sm text-gray-300">
+                      <span>₹0</span>
+                      <span>₹{priceRange.toLocaleString()}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10000"
+                      step="200"
+                      value={priceRange}
+                      onChange={handlePriceChange}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                    />
+                    <button
+                      onClick={resetPriceRange}
+                      className="text-sm text-yellow-400 hover:text-yellow-300"
+                    >
+                      Reset Price
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                    Sort By
+                  </h3>
+                  <select
+                    value={sortType}
+                    onChange={handleSortChange}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="all">Default</option>
+                    <option value="lowToHigh">Price: Low to High</option>
+                    <option value="highToLow">Price: High to Low</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={clearFilters}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                  >
+                    Clear All
+                  </button>
+                  <button
+                    onClick={() => setMobileFiltersOpen(false)}
+                    className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Book Listing */}
+          <div className="flex-1">
+            {/* Active Filters */}
+            {(filtered && filtered.totalPages > 1) || (!filtered && totalPages > 1) ? (
+              <div className="mt-12 flex justify-center items-center gap-4">
+                <button
+                  onClick={handlePrev}
+                  disabled={
+                    (filtered && filtered.currentPage === 1) ||
+                    (!filtered && currentPage === 1)
+                  }
+                  className="p-2 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500"
+                >
+                  <FiChevronLeft size={20} />
+                </button>
+                <span className="text-gray-300">
+                  Page {filtered ? filtered.currentPage : currentPage} of{" "}
+                  {filtered ? filtered.totalPages : totalPages}
+                </span>
+                <button
+                  onClick={handleNext}
+                  disabled={
+                    (filtered && filtered.currentPage === filtered.totalPages) ||
+                    (!filtered && currentPage === totalPages)
+                  }
+                  className="p-2 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500"
+                >
+                  <FiChevronRight size={20} />
+                </button>
+              </div>
+            ) : null}
+
+
+            {/* Loading State */}
+            {loading && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-gray-700 rounded-xl aspect-[2/3] animate-pulse"></div>
                 ))}
               </div>
             )}
-          </div>
 
-          <div className="flex gap-4">
-            <select
-              className="p-3 rounded-md text-black border border-zinc-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              onChange={handleSortChange}
-              value={sortType}
-            >
-              <option value="all">Price: All</option>
-              <option value="highToLow">High to Low</option>
-              <option value="lowToHigh">Low to High</option>
-            </select>
-          </div>
+            {/* Empty State */}
+            {!loading && display.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 text-5xl mb-4">📚</div>
+                <h3 className="text-xl font-medium text-gray-300 mb-2">
+                  No books found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Try adjusting your search or filters
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
 
-          {/* Filter by Price Range */}
-          <div className="flex align-middle justify-between">
-            <span className="font-semibold">Filter by Price:</span>
-            <input
-              type="range"
-              name="priceRange"
-              id="priceRange"
-              min={0}
-              max={10000}
-              step={200}
-              value={priceRange}
-              onChange={(e) => {
-                const maxVal = parseInt(e.target.value);
-                setPriceRange(maxVal);
-                applyFilters(selected, sortType, maxVal);
-              }}
-            />
-            <span>₹0 to ₹{priceRange}</span>
+            {/* Book Grid */}
+            {!loading && display.length > 0 && (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {display.map((item) => (
+                    <BookCard
+                      key={item._id}
+                      data={item}
+
+                      className="transition-transform hover:scale-105 hover:shadow-lg"
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {!filtered && totalPages > 1 && (
+                  <div className="mt-12 flex justify-center items-center gap-4">
+                    <button
+                      onClick={handlePrev}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500"
+                      aria-label="Previous page"
+                    >
+                      <FiChevronLeft size={20} />
+                    </button>
+                    <span className="text-gray-300">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={handleNext}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500"
+                      aria-label="Next page"
+                    >
+                      <FiChevronRight size={20} />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Clear Filters */}
-      {filtered && (
-        <div className="mb-6 text-center">
-          <button
-            onClick={clearFilters}
-            className="bg-red-500 hover:bg-red-600 px-5 py-2 rounded-md font-semibold shadow-md transition"
-          >
-            Clear Filters
-          </button>
-        </div>
-      )}
-
-      {/* Loader */}
-      {loading && (
-        <div className="flex justify-center my-12">
-          <Loader />
-        </div>
-      )}
-
-      {/* No Books */}
-      {!loading && display?.length === 0 && (
-        <p className="text-center text-zinc-400">No books found.</p>
-      )}
-
-      {/* Book Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 mt-10">
-        {display.map((item, index) => (
-          <div
-            key={index}
-            className="transition-transform hover:scale-[1.03] hover:shadow-lg duration-200"
-          >
-            <BookCard data={item} />
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {!filtered && (
-        <div className="flex justify-center mt-10 gap-4">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            className="px-5 py-2 rounded-full font-semibold bg-yellow-500 text-black hover:bg-yellow-600 transition disabled:bg-gray-500"
-          >
-            Prev
-          </button>
-          <span className="px-4 py-2 text-xl font-medium">
-            {currentPage}/{totalPages}
-          </span>
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className="px-5 py-2 rounded-full font-semibold bg-yellow-500 text-black hover:bg-yellow-600 transition disabled:bg-gray-500"
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
+      </section>
+    </main>
   );
-};
+}
+export default AllBooks

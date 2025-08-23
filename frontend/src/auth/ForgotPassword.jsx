@@ -9,7 +9,7 @@ export const ForgotPassword = () => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:3000/api/user/forgot-password", { email });
-     console.log(res);
+    
      
       Swal.fire("Success", res.data.message, "success");
     } catch (error) {

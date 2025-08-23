@@ -3,15 +3,15 @@ import { loginUser, registerUser } from "./authThunks";
 
 // Load persisted state from localStorage
 const token = localStorage.getItem("token");
-const userid = localStorage.getItem("id");
+const userId = localStorage.getItem("id");
 const role = localStorage.getItem("role");
 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     isLoggedIn: !!token,
-    role: role || null,
-    userid: userid || null,
+    role: role || 'user',
+    userId: userId || null,
     token: token || null,
     loading: false,
     error: null,
@@ -20,7 +20,7 @@ const authSlice = createSlice({
     logout(state) {
       state.isLoggedIn = false;
       state.role = null;
-      state.userid = null;
+      state.userId = null;
       state.token = null;
 
       // Clear localStorage
@@ -39,13 +39,13 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.isLoggedIn = true;
-        state.userid = payload.userid;
+        state.userId = payload.userId;
         state.token = payload.token;
         state.role = payload.role;
 
         // Store to localStorage
         localStorage.setItem("token", payload.token);
-        localStorage.setItem("id", payload.userid);
+        localStorage.setItem("id", payload.userId);
         localStorage.setItem("role", payload.role);
       })
       .addCase(registerUser.rejected, (state, { payload }) => {
@@ -61,13 +61,14 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.isLoggedIn = true;
-        state.userid = payload.userid;
+        console.log("log for slice",payload)
+        state.userId = payload.userId;
         state.token = payload.token;
         state.role = payload.role;
 
         // Store to localStorage
         localStorage.setItem("token", payload.token);
-        localStorage.setItem("id", payload.userid);
+        localStorage.setItem("id", payload.userId);
         localStorage.setItem("role", payload.role);
       })
       .addCase(loginUser.rejected, (state, { payload }) => {

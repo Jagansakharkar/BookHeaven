@@ -14,5 +14,5 @@ const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 4 }) 
     </div>
   );
 };
+export default TextAreaField
 
-export default TextAreaField;

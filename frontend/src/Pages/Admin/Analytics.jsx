@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { BackButton } from '../../Components/common/BackButton';
+import  BackButton  from '../../Components/common/BackButton';
 
 import {
   Chart as ChartJS,
@@ -18,7 +18,7 @@ import { Pie, Bar, Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend);
 
-export const Analytics = () => {
+const Analytics = () => {
   const { userid, token } = useSelector(state => state.auth);
   const headers = { userid, authorization: `Bearer ${token}` };
 
@@ -137,3 +137,5 @@ const ChartCard = ({ title, children, fullWidth = false }) => (
 const EmptyChart = () => (
   <div className="text-zinc-400 text-center py-10">No data available</div>
 );
+
+export default Analytics;

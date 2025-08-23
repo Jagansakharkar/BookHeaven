@@ -12,7 +12,7 @@ const app = express();
 // cross origin policy
 
 const corsOptions = {
-  origin: '*',
+  origin: "*",
   // origin: 'http://localhost:5173', 
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -23,7 +23,7 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
 app.use(express.json());
 
 //authentication

@@ -1,15 +1,17 @@
 const mongoose = require('mongoose');
 
 const ratingSchema = new mongoose.Schema({
-  bookid: {
-    type: mongoose.Types.ObjectId,
+  book: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'books',
-    required: true
+    required: true,
+    index: true // Index for faster book-wise queries
   },
-  userid: {
-    type: mongoose.Types.ObjectId,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
-    required: true
+    required: true,
+    index: true // Index for user-specific queries
   },
   rating: {
     type: Number,
@@ -20,12 +22,18 @@ const ratingSchema = new mongoose.Schema({
   comment: {
     type: String,
     trim: true,
+    maxlength: 1000, // prevent excessively large text
     default: ''
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.models.rating || mongoose.model('rating', ratingSchema);
+// Ensure a user can only rate a book once
+ratingSchema.index({ book: 1, user: 1 }, { unique: true });
+
+module.exports = mongoose.models.Rating || mongoose.model('Rating', ratingSchema);

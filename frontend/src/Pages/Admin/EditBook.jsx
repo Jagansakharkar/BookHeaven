@@ -2,40 +2,49 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BackButton } from '../../Components/common/BackButton';
-
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { fetchCategories } from '../../store/Categories/categoryThunks';
-import { useDispatch } from 'react-redux';
+import { FaBook, FaUserEdit, FaDollarSign, FaBoxOpen, FaCalendarAlt, FaFileAlt, FaLanguage, FaArrowLeft, FaSave } from 'react-icons/fa';
+import { useBookById, useUpdateBook } from '../../hooks/Book';
 
-export const EditBook = () => {
-  const dispatch = useDispatch()
+const EditBook = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { bookid } = useParams();
   const [bookData, setBookData] = useState(null);
-  const [updating, setUpdating] = useState(false);
 
-  const { userid, token } = useSelector(state => state.auth);
   const { categories } = useSelector(state => state.categories);
-
-  console.log(categories)
-
-  const headers = {
-    userid,
-    authorization: `Bearer ${token}`,
-  };
+  const { mutate: bookById, isLoading, isError, error } = useBookById()
+  const { mutate: updateBook, isLoading: updating } = useUpdateBook()
 
   useEffect(() => {
     dispatch(fetchCategories());
     const fetchBook = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:3000/api/books/get-book-by-id/${bookid}`,
-          { headers }
-        );
-        setBookData(res.data.data);
+        bookById(bookid,
+          {
+            onSuccess: (response) => {
+              setBookData(res.data.data);
+            },
+            onError: (response) => {
+              Swal.fire({
+                icon: 'error',
+                text: `Error fetching book: ${response.message}`,
+                background: '#18181b',
+                color: '#fff',
+                confirmButtonColor: '#3b82f6'
+              });
+            }
+          }
+        )
       } catch (error) {
-        Swal.fire({ icon: 'error', text: `Error fetching book: ${error.message}` });
+        Swal.fire({
+          icon: 'error',
+          text: `Error fetching book: ${error.message}`,
+          background: '#18181b',
+          color: '#fff',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     };
     fetchBook();
@@ -45,101 +54,174 @@ export const EditBook = () => {
     setBookData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleUpdate = async () => {
-    if (!bookData.title || !bookData.author || !bookData.desc || !bookData.price || !bookData.publisher || !bookData.pages || !bookData.publishedDate || !bookData.stock) {
-      return Swal.fire({ icon: 'warning', text: 'Please fill all required fields.' });
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!bookData.title || !bookData.author || !bookData.desc || !bookData.price ||
+      !bookData.publisher || !bookData.pages || !bookData.publishedDate || !bookData.stock) {
+      return Swal.fire({
+        icon: 'warning',
+        text: 'Please fill all required fields.',
+        background: '#18181b',
+        color: '#fff',
+        confirmButtonColor: '#3b82f6'
+      });
     }
 
-    setUpdating(true);
-    try {
-      const res = await axios.put(
-        `http://localhost:3000/api/admin/books/update-book/${bookid}`,
-        bookData,
-        { headers }
-      );
 
-      if (res.data.success) {
-        Swal.fire({ icon: 'success', text: res.data.message });
-        navigate('/admin/dashboard/inventory');
-      } else {
-        Swal.fire({ icon: 'error', text: res.data.message });
-      }
+    try {
+
+      updateBook(bookid, bookData, {
+        onSuccess: (response) => {
+          Swal.fire({
+            icon: 'success',
+            text: response.message,
+            background: '#18181b',
+            color: '#fff',
+            confirmButtonColor: '#3b82f6'
+          });
+          navigate('/admin/dashboard/inventory');
+        },
+        onError: (response) => {
+          Swal.fire({
+            icon: 'error',
+            text: response.data.message,
+            background: '#18181b',
+            color: '#fff',
+            confirmButtonColor: '#3b82f6'
+          });
+        }
+      })
     } catch (error) {
-      Swal.fire({ icon: 'error', text: `Update failed: ${error.message}` });
-    } finally {
-      setUpdating(false);
+      Swal.fire({
+        icon: 'error',
+        text: `Update failed: ${error.message}`,
+        background: '#18181b',
+        color: '#fff',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
   if (!bookData) {
     return (
-      <div className="text-center text-white py-10">
-        <div className="loader mx-auto mb-2"></div>
-        <p>Loading book data...</p>
+      <div className="flex items-center justify-center min-h-screen bg-zinc-900">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white">Loading book data...</p>
+        </div>
       </div>
     );
   }
 
+  const formFields = [
+    { label: "Title", field: "title", icon: <FaBook className="text-zinc-400" /> },
+    { label: "Author", field: "author", icon: <FaUserEdit className="text-zinc-400" /> },
+    { label: "Price", field: "price", icon: <FaDollarSign className="text-zinc-400" />, type: "number" },
+    { label: "Stock Quantity", field: "stock", icon: <FaBoxOpen className="text-zinc-400" />, type: "number" },
+    { label: "Language", field: "language", icon: <FaLanguage className="text-zinc-400" /> },
+    { label: "Publisher", field: "publisher", icon: <FaBook className="text-zinc-400" /> },
+    { label: "Published Date", field: "publishedDate", icon: <FaCalendarAlt className="text-zinc-400" />, type: "date" },
+    { label: "Pages", field: "pages", icon: <FaFileAlt className="text-zinc-400" />, type: "number" }
+  ];
+
   return (
-    <div className="p-6 text-white max-w-xl mx-auto">
+    <div className="min-h-screen bg-zinc-900 p-4 md:p-8">
+      <div className="max-w-3xl mx-auto">
 
-      <BackButton to={"/admin/dashboard/inventory"} text='Back' />
+        <BackButton to={"/admin/dashboard/inventory"} text='Back' />
 
-      <h2 className="text-2xl font-bold mb-4">Edit Book</h2>
 
-      {[
-        { label: "Title", field: "title" },
-        { label: "Author", field: "author" },
-        { label: "Description", field: "desc", isTextarea: true },
-        { label: "Price", field: "price" },
-        { label: "Stock", field: "stock" },
-        { label: "Language", field: "language" },
-        { label: "Publisher", field: "publisher" },
-        { label: "Published Date", field: "publishedDate", type: "date" },
-        { label: "Pages", field: "pages", type: "number" }
-      ].map(({ label, field, isTextarea, type = "text" }) => (
-        <div key={field} className="mb-4">
-          <label className="block mb-1">{label}</label>
-          {isTextarea ? (
-            <textarea
-              value={bookData[field] ?? ""}
-              onChange={e => handleChange(field, e.target.value)}
-              className="w-full p-2 bg-zinc-800 rounded"
-            />
-          ) : (
-            <input
-              type={type}
-              value={bookData[field] ?? "x"}
-              onChange={e => handleChange(field, e.target.value)}
-              className="w-full p-2 bg-zinc-800 rounded"
-            />
-          )}
+        <div className="bg-zinc-800 rounded-xl shadow-lg overflow-hidden border border-zinc-700">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
+            <div className="flex items-center gap-3">
+              <FaBook className="text-2xl text-white" />
+              <h1 className="text-2xl font-bold text-white">Edit Book Details</h1>
+            </div>
+            <p className="text-blue-100 mt-1">Update the book information below</p>
+          </div>
+
+          <form onSubmit={handleUpdate} className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {formFields.map(({ label, field, icon, type = "text" }) => (
+                <div key={field} className="space-y-2">
+                  <label className="block text-sm font-medium text-zinc-300">{label}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      {icon}
+                    </div>
+                    <input
+                      type={type}
+                      value={bookData[field] || ""}
+                      onChange={e => handleChange(field, e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 bg-zinc-700 border border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Category</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaBoxOpen className="text-zinc-400" />
+                </div>
+                <select
+                  value={bookData.category || ""}
+                  onChange={e => handleChange('category', e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 bg-zinc-700 border border-zinc-600 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(cat => (
+                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Description</label>
+              <textarea
+                value={bookData.desc || ""}
+                onChange={e => handleChange('desc', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2.5 bg-zinc-700 border border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={updating}
+                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${updating
+                  ? 'bg-blue-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg'
+                  }`}
+              >
+                {updating ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <FaSave />
+                    Update Book
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-      ))}
-
-      {/* Category Dropdown */}
-      <div className="mb-4">
-        <label htmlFor="category" className="block mb-1">Category</label>
-        <select
-          id="category"
-          value={bookData.category ?? ""}
-          onChange={e => handleChange('category', e.target.value)}
-          className="w-full p-2 bg-zinc-800 rounded"
-        >
-          <option value="">Select Category</option>
-          {categories.map(cat => (
-            <option key={cat._id} value={cat._id}>{cat.name}</option>
-          ))}
-        </select>
       </div>
-
-      <button
-        onClick={handleUpdate}
-        disabled={updating}
-        className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {updating ? 'Updating...' : 'Update Book'}
-      </button>
     </div>
   );
 };
+export default EditBook

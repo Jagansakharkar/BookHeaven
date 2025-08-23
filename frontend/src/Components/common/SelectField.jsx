@@ -20,4 +20,4 @@ const SelectField = ({ label, name, value, onChange, options }) => {
   );
 };
 
-export default SelectField;
+export default SelectField

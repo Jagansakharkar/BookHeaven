@@ -1,12 +1,16 @@
+import { FaBook, FaSearch, FaHeart, FaShoppingCart, FaTruck, FaUndo } from 'react-icons/fa';
 export const FeaturesSection = () => {
+
   const features = [
-    { icon: '📚', title: 'Wide Book Collection', desc: 'Thousands of books from all genres and authors.' },
-    { icon: '🔍', title: 'Smart Search & Filters', desc: 'Find books easily by genre, price, author, or rating.' },
-    { icon: '❤️', title: 'Wishlist Support', desc: 'Save favorite books for later in one click.' },
-    { icon: '🛒', title: 'Secure Checkout', desc: 'Fast and secure order placement and payment.' },
-    { icon: '🚚', title: 'Fast Delivery', desc: 'Get books delivered within 3–5 business days.' },
-    { icon: '🔁', title: 'Easy Returns', desc: 'Return any product within 7 days hassle-free.' },
+    { icon: <FaBook />, title: 'Wide Book Collection', desc: 'Thousands of books from all genres and authors.' },
+    { icon: <FaSearch />, title: 'Smart Search & Filters', desc: 'Find books easily by genre, price, author, or rating.' },
+    { icon: <FaHeart />, title: 'Wishlist Support', desc: 'Save favorite books for later in one click.' },
+    { icon: <FaShoppingCart />, title: 'Secure Checkout', desc: 'Fast and secure order placement and payment.' },
+    { icon: <FaTruck />, title: 'Fast Delivery', desc: 'Get books delivered within 3–5 business days.' },
+    { icon: <FaUndo />, title: 'Easy Returns', desc: 'Return any product within 7 days hassle-free.' },
   ];
+
+
 
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">

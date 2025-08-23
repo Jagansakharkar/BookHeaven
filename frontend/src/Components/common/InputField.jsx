@@ -1,12 +1,12 @@
-export const InputField = ({
+const InputField = ({
   label,
   name,
-  type = "text",
-  placeholder = "",
+  type,
+  placeholder,
   value,
   onChange,
-  required = false,
-}){
+  required,
+}) => {
 
   return (
     <>
@@ -32,6 +32,5 @@ export const InputField = ({
       </div>
     </>
   );
-};
-
-
+}
+export default InputField

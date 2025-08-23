@@ -3,11 +3,16 @@ const router = express.Router()
 const {authenticateToken} = require('../../middleware/useAuth')
 const { getAllBooks, addBook, updatedBook, deleteBook, bookSearch } = require('../../controllers/admin/bookControllers')
 
-router.get('/get-all-books', authenticateToken, getAllBooks)
-router.post('/add-book', authenticateToken, addBook)
-router.put('/update-book/:bookid', authenticateToken, updatedBook)
-router.delete('/delete-book/:book', authenticateToken, deleteBook)
-router.get('/book/search', authenticateToken, bookSearch)
+//get all books
+router.get('/', authenticateToken, getAllBooks)
+// add book
+router.post('/add', authenticateToken, addBook)
+// update book
+router.put('/:bookId', authenticateToken, updatedBook)
+// delete book
+router.delete('/:bookId', authenticateToken, deleteBook)
+// search book
+router.get('/search', authenticateToken, bookSearch)
 
 
 module.exports=router

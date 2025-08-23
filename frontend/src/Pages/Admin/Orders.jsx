@@ -1,59 +1,73 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { MdDeleteOutline } from "react-icons/md";
-import { BackButton } from '../../Components/common/BackButton';
-
-import { FaEdit } from "react-icons/fa";
+import { MdDeleteOutline, MdFilterList } from "react-icons/md";
+import { FaEdit, FaSearch, FaBox, FaShippingFast, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-
-export const Orders = () => {
+import { useChangeOrderStatus, useDeleteOrder, useFetchOrders, useHandleOrderUpdate, useHandlePaymentStatusChange } from '../../hooks/Order';
+import BackButton from '../../Components/common/BackButton';
+const Orders = () => {
   const navigate = useNavigate();
-  const { token, userid } = useSelector(state => state.auth);
 
-  const [orders, setOrders] = useState([]);
+  let [order, setOrders] = useState({})
   const [originalOrders, setOriginalOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
+  const { data: fetchOrder, isLoading: isFetchOrderLoading } = useFetchOrders()
+  const { mutate: deleteOrder, isLoading: isDeleteOrderLoading } = useDeleteOrder()
+  const { mutate: changeOrderStatus, isLoading: isChangeOrderLoading } = useChangeOrderStatus()
+  const { mutate: handleOrderStatus, isLoading: isOrderPaymentStatusLoading } = useHandlePaymentStatusChange()
 
-  const headers = {
-    userid,
-    Authorization: `Bearer ${token}`,
-  };
-
-  const fetchOrders = useCallback(async () => {
-    try {
-      const res = await axios.get('http://localhost:3000/api/admin/order/get-all-orders', { headers });
-      setOrders(res.data.data);
-      setOriginalOrders(res.data.data);
-    } catch (err) {
-      Swal.fire({ icon: 'error', text: `Failed to fetch orders: ${err.message}` });
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  const handleDelete = async (orderid) => {
+  order = fetchOrder ? fetchOrder : []
+  const handleDelete = async (orderId) => {
     const confirm = await Swal.fire({
       icon: 'warning',
       title: 'Are you sure?',
       text: 'This order will be deleted permanently!',
       showCancelButton: true,
-      confirmButtonText: 'Yes, delete it!'
+      confirmButtonText: 'Yes, delete it!',
+      background: '#18181b',
+      color: '#fff',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#ef4444'
     });
 
     if (confirm.isConfirmed) {
       try {
-        const res = await axios.delete(`http://localhost:3000/api/admin/order/delete-order/${orderid}`, { headers });
-        if (res.data.success) {
-          setOrders(prev => prev.filter(o => o._id !== orderid));
-          Swal.fire('Deleted!', res.data.message, 'success');
-        } else {
-          Swal.fire('Error', res.data.message, 'error');
-        }
+        deleteOrder(orderId,
+          {
+            onSuccess: (response) => {
+              setOrders(prev => prev.filter(o => o._id !== orderid));
+              Swal.fire({
+                title: 'Deleted!',
+                text: res.data.message,
+                icon: 'success',
+                background: '#18181b',
+                color: '#fff',
+                confirmButtonColor: '#3b82f6'
+              });
+            },
+            onError: (response) => {
+              Swal.fire({
+                title: 'Error',
+                text: res.data.message,
+                icon: 'error',
+                background: '#18181b',
+                color: '#fff',
+                confirmButtonColor: '#3b82f6'
+              });
+            }
+          }
+        )
       } catch (err) {
-        Swal.fire('Error', `Failed to delete order: ${err.message}`, 'error');
+        Swal.fire({
+          title: 'Error',
+          text: `Failed to delete order: ${err.message}`,
+          icon: 'error',
+          background: '#18181b',
+          color: '#fff',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     }
   };
@@ -61,34 +75,73 @@ export const Orders = () => {
   const handleStatusChange = async (orderid, e) => {
     const newStatus = e.target.value;
     try {
-      const res = await axios.put(
-        `http://localhost:3000/api/admin/order/change-order-status/${orderid}`,
-        { status: newStatus },
-        { headers }
-      );
-      if (res.data.success) {
-        setOrders(prev => prev.map(o => o._id === orderid ? { ...o, status: newStatus } : o));
-        Swal.fire({ icon: 'success', text: res.data.message });
-      }
+
+      changeOrderStatus(orderid, newStatus, {
+        onSuccess: (response) => {
+          setOrders(prev => prev.map(o => o._id === orderid ? { ...o, status: newStatus } : o));
+          Swal.fire({
+            icon: 'success',
+            text: response.data.message,
+            background: '#18181b',
+            color: '#fff',
+            confirmButtonColor: '#3b82f6'
+          });
+        },
+        onError: (response) => {
+          Swal.fire({
+            icon: 'error',
+            text: `Status update failed: ${response.message}`,
+            background: '#18181b',
+            color: '#fff',
+            confirmButtonColor: '#3b82f6'
+          });
+        }
+      })
+
     } catch (err) {
-      Swal.fire({ icon: 'error', text: `Status update failed: ${err.message}` });
+      Swal.fire({
+        icon: 'error',
+        text: `Status update failed: ${err.message}`,
+        background: '#18181b',
+        color: '#fff',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
   const handlePaymentStatusChange = async (orderid, e) => {
     const newStatus = e.target.value;
     try {
-      const res = await axios.put(
-        `http://localhost:3000/api/admin/order/change-payment-status/${orderid}`,
-        { paymentStatus: newStatus },
-        { headers }
-      );
-      if (res.data.success) {
-        setOrders(prev => prev.map(o => o._id === orderid ? { ...o, paymentStatus: newStatus } : o));
-        Swal.fire({ icon: 'success', text: res.data.message });
-      }
+      handleOrderStatus(orderid, newStatus, {
+        onSuccess: (response) => {
+          setOrders(prev => prev.map(o => o._id === orderid ? { ...o, paymentStatus: newStatus } : o));
+          Swal.fire({
+            icon: 'success',
+            text: response.data.message,
+            background: '#18181b',
+            color: '#fff',
+            confirmButtonColor: '#3b82f6'
+          });
+        },
+        onError: (response) => {
+          Swal.fire({
+            icon: 'error',
+            text: `Payment status update failed: ${response.message}`,
+            background: '#18181b',
+            color: '#fff',
+            confirmButtonColor: '#3b82f6'
+          });
+        }
+      })
+
     } catch (err) {
-      Swal.fire({ icon: 'error', text: `Payment status update failed: ${err.message}` });
+      Swal.fire({
+        icon: 'error',
+        text: `Payment status update failed: ${err.message}`,
+        background: '#18181b',
+        color: '#fff',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
@@ -96,6 +149,7 @@ export const Orders = () => {
   const paymentStatuses = ["Pending", "Paid", "Failed"];
 
   const handleFilter = (status) => {
+    setActiveFilter(status);
     if (status === "All") {
       setOrders(originalOrders);
     } else {
@@ -103,103 +157,196 @@ export const Orders = () => {
     }
   };
 
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    const filtered = originalOrders.filter(order =>
+      order._id.toLowerCase().includes(term) ||
+      (order.userid?.fullname?.toLowerCase().includes(term)) ||
+      order.books.some(book => book.title.toLowerCase().includes(term))
+    );
+    setOrders(filtered);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Delivered': return 'bg-green-500/20 text-green-400';
+      case 'Canceled': return 'bg-red-500/20 text-red-400';
+      case 'Shipped':
+      case 'Out for Delivery': return 'bg-blue-500/20 text-blue-400';
+      case 'Packed': return 'bg-yellow-500/20 text-yellow-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+
+  const getPaymentStatusColor = (status) => {
+    switch (status) {
+      case 'Paid': return 'bg-green-500/20 text-green-400';
+      case 'Failed': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-yellow-500/20 text-yellow-400';
+    }
+  };
+
   return (
-    <div className="p-4 bg-zinc-950 text-white min-h-screen">
+    <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
+      <div className="max-w-screen-2xl mx-auto">
 
-      <BackButton to={"/admin/dashboard"} text='Back' />
+        <BackButton to={"/admin/dashboard"} text='Back to Dashboard' />
 
 
-      <h2 className="text-3xl font-semibold text-zinc-300 mb-6">Orders Management</h2>
+        <div className="bg-zinc-900 rounded-xl shadow-lg overflow-hidden border border-zinc-800">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold">Orders Management</h1>
+                <p className="text-blue-100">View and manage customer orders</p>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaSearch className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                />
+              </div>
+            </div>
+          </div>
 
-      <div className="flex flex-wrap gap-3 mb-4">
-        <button onClick={() => handleFilter("All")} className="bg-zinc-700 px-4 py-2 rounded">All</button>
-        {allStatuses.map(status => (
-          <button key={status} onClick={() => handleFilter(status)} className="bg-zinc-700 px-4 py-2 rounded">
-            {status}
-          </button>
-        ))}
-      </div>
+          {/* Filters */}
+          <div className="p-4 bg-zinc-800 border-b border-zinc-700">
+            <div className="flex items-center gap-2 mb-2">
+              <MdFilterList className="text-lg" />
+              <span className="font-medium">Filter by status:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleFilter("All")}
+                className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${activeFilter === "All" ? 'bg-blue-600 text-white' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+              >
+                All
+              </button>
+              {allStatuses.map(status => (
+                <button
+                  key={status}
+                  onClick={() => handleFilter(status)}
+                  className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 ${activeFilter === status ? getStatusColor(status) + ' font-semibold' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+                >
+                  {status === 'Packed' && <FaBox className="text-xs" />}
+                  {status === 'Shipped' && <FaShippingFast className="text-xs" />}
+                  {status === 'Delivered' && <FaCheckCircle className="text-xs" />}
+                  {status === 'Canceled' && <FaTimesCircle className="text-xs" />}
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="overflow-x-auto rounded shadow">
-        <table className="min-w-full bg-zinc-800 text-sm text-white rounded">
-          <thead>
-            <tr className="bg-zinc-900 sticky top-0 z-10">
-              <th className="p-2">#</th>
-              <th className="p-2">Order ID</th>
-              <th className="p-2">User</th>
-              <th className="p-2">Books</th>
-              <th className="p-2">Date</th>
-              <th className="p-2">Address</th>
-              <th className="p-2">Qty</th>
-              <th className="p-2">Amount</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Payment Method</th>
-              <th className="p-2">Payment Status</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 ? (
-              <tr><td colSpan="12" className="text-center p-4 text-zinc-400">No orders found.</td></tr>
-            ) : (
-              orders.map((order, index) => (
-                <tr key={order._id} className="text-center border-b border-zinc-700 hover:bg-zinc-700">
-                  <td className="p-2">{index + 1}</td>
-                  <td className="p-2">{order._id}</td>
-                  <td className="p-2">{order.userid?.fullname || "Unknown"}</td>
-                  <td className="p-2 text-left">
-                    {order.books.map((b, idx) => (
-                      <div key={idx}>{b.title} (x{b.quantity})</div>
-                    ))}
-                  </td>
-                  <td className="p-2">{new Date(order.createdAt).toLocaleString()}</td>
-                  <td className="p-2 text-left text-xs">
-                    {order.address?.name}<br />
-                    {order.address?.street}, {order.address?.city}<br />
-                    {order.address?.state} - {order.address?.pincode}<br />
-                    📞 {order.address?.phoneno}
-                  </td>
-                  <td className="p-2">
-                    {order.books.reduce((sum, b) => sum + b.quantity, 0)}
-                  </td>
-                  <td className="p-2">₹{order.totalAmount}</td>
-                  <td className="p-2">
-                    <select
-                      className="bg-zinc-700 px-2 py-1 rounded"
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order._id, e)}
-                    >
-                      {allStatuses.map(status => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="p-2">{order.paymentMethod}</td>
-                  <td className="p-2">
-                    <select
-                      className="bg-zinc-700 px-2 py-1 rounded"
-                      value={order.paymentStatus}
-                      onChange={(e) => handlePaymentStatusChange(order._id, e)}
-                    >
-                      {paymentStatuses.map(ps => (
-                        <option key={ps} value={ps}>{ps}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="p-2 flex justify-center gap-2">
-                    <button onClick={() => navigate(`/admin/dashboard/edit-order/${order._id}`)} className="text-blue-400">
-                      <FaEdit />
-                    </button>
-                    <button onClick={() => handleDelete(order._id)} className="text-red-400">
-                      <MdDeleteOutline />
-                    </button>
-                  </td>
+          {/* Orders Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-zinc-700">
+              <thead className="bg-zinc-800">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Order ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Customer</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Items</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Date</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Amount</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Payment</th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-zinc-300 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="bg-zinc-900 divide-y divide-zinc-800">
+                {orders.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-4 text-center text-zinc-400">
+                      No orders found
+                    </td>
+                  </tr>
+                ) : (
+                  orders.map((order) => (
+                    <tr key={order._id} className="hover:bg-zinc-800/50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-blue-400">{order._id.substring(0, 8)}...</div>
+                        <div className="text-xs text-zinc-400">{order.paymentMethod}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium">{order.userid?.fullname || "Unknown"}</div>
+                        <div className="text-xs text-zinc-400">{order.address?.phone}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          {order.books.slice(0, 2).map((b, idx) => (
+                            <div key={idx} className="mb-1">
+                              {b.title} <span className="text-zinc-400">(x{b.quantity})</span>
+                            </div>
+                          ))}
+                          {order.books.length > 2 && (
+                            <div className="text-xs text-blue-400">+{order.books.length - 2} more</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div className="text-xs text-zinc-400">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        ₹{order.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          className={`text-sm px-2 py-1 rounded ${getStatusColor(order.status)}`}
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order._id, e)}
+                        >
+                          {allStatuses.map(status => (
+                            <option key={status} value={status} className="bg-zinc-900">{status}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          className={`text-sm px-2 py-1 rounded ${getPaymentStatusColor(order.paymentStatus)}`}
+                          value={order.paymentStatus}
+                          onChange={(e) => handlePaymentStatusChange(order._id, e)}
+                        >
+                          {paymentStatuses.map(ps => (
+                            <option key={ps} value={ps} className="bg-zinc-900">{ps}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => navigate(`/admin/dashboard/edit-order/${order._id}`)}
+                            className="text-blue-400 hover:text-blue-300 p-1 rounded hover:bg-blue-900/30"
+                            title="Edit order"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(order._id)}
+                            className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-900/30"
+                            title="Delete order"
+                          >
+                            <MdDeleteOutline />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+export default Orders

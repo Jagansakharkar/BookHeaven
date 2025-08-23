@@ -27,9 +27,9 @@ exports.rateBook = async (req, res) => {
 
 exports.getRatings = async (req, res) => {
   try {
-    const bookid = req.params.bookid
-    const ratings = await Rating.find({ bookid: bookid })
-      .populate('userid', "fullname avatar")
+    const {bookId} = req.params
+    const ratings = await Rating.find({ bookId: bookId })
+      .populate('user', "fullname avatar")
       .sort({ createdAt: -1 })
 
     res.status(200).json({ success: true, data: ratings })
@@ -41,9 +41,9 @@ exports.getRatings = async (req, res) => {
 // Get rating summary
 exports.ratingSummary = async (req, res) => {
   try {
-    const bookid = req.params.bookid;
+    const {bookId} = req.params;
 
-    const ratings = await Rating.find({ bookid: bookid });
+    const ratings = await Rating.find({ bookId: bookId });
 
     let total = ratings.length;
     let sum = 0;
@@ -73,8 +73,7 @@ exports.ratingSummary = async (req, res) => {
 exports.updateReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
-    const reviewId = req.params.reviewid;
-    const userId = req.user.id;
+    const {userId,reviewId} = req.params;
 
     const review = await Rating.findById(reviewId);
 
@@ -100,8 +99,7 @@ exports.updateReview = async (req, res) => {
 // delete review
 exports.deleteReview = async (req, res) => {
   try {
-    const reviewId = req.params.reviewid;
-    const userId = req.user.id;
+    const {userId,reviewId} = req.params;
 
     const review = await Rating.findById(reviewId);
 
@@ -117,7 +115,6 @@ exports.deleteReview = async (req, res) => {
 
     res.status(200).json({ success: true, message: "Review deleted successfully" });
   } catch (error) {
-    console.error("Delete review error:", error);
     res.status(500).json({ success: false, message: "Failed to delete review" });
   }
 };

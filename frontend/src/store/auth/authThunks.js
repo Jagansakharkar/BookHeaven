@@ -7,18 +7,19 @@ export const registerUser = createAsyncThunk(
   async (userData, thunkAPI) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/auth/sign-up",
+        `${process.env.BACKEND_URL}/api/auth/sign-up`,
         userData,
         { headers: { "Content-Type": "application/json" } }
       );
 
-      const { token, userid } = response.data;
+      const { token, userId, role } = response.data;
       localStorage.setItem("token", token);
-      localStorage.setItem("id", userid);
+      localStorage.setItem("id", userId);
+      localStorage.setItem('role', role)
 
       return {
         token,
-        userid,
+        userId,
         role
       }
     } catch (error) {
@@ -35,25 +36,22 @@ export const loginUser = createAsyncThunk(
   async (credentials, thunkAPI) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
         credentials,
-        { headers: { "Content-Type": "application/json" } }
+        {
+          headers: { "Content-Type": "application/json" }
+        }
       );
 
-      const { token, userid, role } = response.data;
-      // Save to localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("id", userid);
-      localStorage.setItem("role", role)
+      const { token, userId, role } = response.data;
 
-      // Return structured payload
-      return {
-        token,
-        userid,
-        role,
-      };
+      localStorage.setItem("token", token);
+      localStorage.setItem("id", userId);
+      localStorage.setItem("role", role);
+
+      return { token: token, userId: userId, role: role };
     } catch (error) {
-      const message = error.response?.data?.message || error.message;
+      const message = error.message || error.data?.message;
       return thunkAPI.rejectWithValue(message);
     }
   }

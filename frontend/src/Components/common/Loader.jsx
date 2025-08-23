@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const Loader = () => {
+const Loader = () => {
   return (
 
     <div role="status">
@@ -10,6 +10,6 @@ export const Loader = () => {
       </svg>
       <span className="sr-only">Loading...</span>
     </div>
-
   )
 }
+export default Loader

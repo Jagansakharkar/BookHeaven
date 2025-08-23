@@ -1,9 +1,9 @@
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 
-export const BackButton = ({ to = -1, text = "Back" }) => {
+const BackButton = ({ to = -1, text = "Back" }) => {
   const navigate = useNavigate();
-
+  console.log("text", text)
   return (
     <button
       onClick={() => navigate(to)}
@@ -13,3 +13,4 @@ export const BackButton = ({ to = -1, text = "Back" }) => {
     </button>
   );
 };
+export default BackButton

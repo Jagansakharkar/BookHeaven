@@ -1,94 +1,179 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import Swal from 'sweetalert2';
+import { FiHeart, FiShoppingCart, FiTrash2 } from 'react-icons/fi';
+import { useAddFavouriteBook, useRemoveFromFravourite } from '../../hooks/Favourites';
 import { useSelector } from 'react-redux';
-import axios from 'axios';
 
-export const BookCard = ({ data, favourites }) => {
-  const { userid, token, isLoggedIn } = useSelector(state => state.auth);
-  const bookid = data._id;
+const BookCard = ({ data, favourites }) => {
+  const { isLoggedIn } = useSelector(state => state.auth)
+  const bookId = data._id;
+  const { mutate: removeFromFavourite, isLoading: isRemoveFavouriteLoading, isError: isRemoveFavouriteError, error: removeFavouriteError }
+    = useRemoveFromFravourite()
+  const { mutate: addToFavourite, isLoading: isAddFavouriteLoading, isError: isAddFavouriteError, error: addFavouriteError }
+    = useAddFavouriteBook()
 
-  const headers = {
-    userid: userid,
-    authorization: `Bearer ${token}`,
+  const handleRemoveBook = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const result = await Swal.fire({
+      title: 'Remove from Favorites?',
+      text: "Are you sure you want to remove this book?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, remove it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        removeFromFavourite(bookId, {
+          onSuccess: (response) => {
+            Swal.fire({
+              icon: response.success ? 'success' : 'error',
+              title: response.success ? 'Removed!' : 'Error',
+              text: response.message,
+              timer: 1500
+            });
+          },
+          onError: (response) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: 'Something went wrong!',
+            });
+          }
+        })
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Something went wrong!',
+        });
+      }
+    }
   };
-
-  const handleRemoveBook = async () => {
+  const handleAddToFavourites = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
-      const response = await axios.put(
-        'http://localhost:3000/api/favourite/remove-from-favourite',
-        { bookid },
-        { headers }
-      );
-
-      Swal.fire({
-        icon: response.data.success ? 'success' : 'error',
-        text: response.data.message
-      });
+      addToFavourite(bookId,
+        {
+          onSuccess: (response) => {
+            Swal.fire({
+              icon: response.success ? 'success' : 'error',
+              title: response.success ? 'Added!' : 'Error',
+              text: response.message,
+              timer: 1500
+            });
+          },
+          onError: (response) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: 'Something went wrong!',
+            });
+          }
+        }
+      )
     } catch (error) {
       Swal.fire({
         icon: 'error',
+        title: 'Oops...',
         text: 'Something went wrong!',
       });
-      console.error("Error Occurred", error);
     }
   };
 
+
   const Wrapper = ({ children }) =>
     isLoggedIn ? (
-      <Link to={`/view-book-details/${data._id}`}>{children}</Link>
+      <Link to={`/view-book-details/${data._id}`} className="block h-full">
+        {children}
+      </Link>
     ) : (
-      <Link to='/login'>{children}</Link>
+      <Link to='/login' className="block h-full">
+        {children}
+      </Link>
     );
 
   return (
-    <>
-      <div className="bg-zinc-800 rounded-2xl p-4 flex flex-col justify-between shadow-md hover:shadow-lg hover:scale-[1.03] transition duration-300 min-h-[350px]">
-        <Wrapper>
-          <div className="h-[220px] bg-zinc-900 rounded-xl flex items-center justify-center overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col h-full">
+      <Wrapper>
+        <div className="relative">
+          <div className="h-48 bg-gray-100 flex items-center justify-center p-4">
             <img
               src={data.url}
               alt={data.title}
-              className="h-full w-auto object-contain"
+              className="h-full w-auto object-contain transition-transform duration-500 hover:scale-105"
             />
           </div>
 
-          <div className="mt-4 space-y-1">
-            <h2 className="text-white text-lg font-bold truncate">{data.title}</h2>
-            <p className="text-zinc-400 text-sm">by {data.author}</p>
-            <p className="text-zinc-400 text-sm">
-              <span className="font-semibold">Category:</span>{" "}
-              {data.category || "Unknown"}
-            </p>
-            <p className="text-yellow-400 font-bold text-lg">₹{data.price}</p>
+          {/* Stock status badge */}
+          <span className={`absolute top-3 left-3 text-xs font-semibold px-2 py-1 rounded-full
+            ${data.stock < 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+            {data.stock < 10 ? 'Limited Stock' : 'In Stock'}
+          </span>
+        </div>
 
-            <span
-              className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mt-2
-              ${data.stock < 10
-                  ? 'bg-red-500 text-white'
-                  : 'bg-green-600 text-white'
-                }`}
-            >
-              {data.stock < 10 ? 'Few Left' : 'In Stock'}
-            </span>
+        <div className="p-4 flex-1 flex flex-col">
+          <h2 className="text-gray-900 font-bold text-lg mb-1 line-clamp-2" title={data.title}>
+            {data.title}
+          </h2>
+          <p className="text-gray-600 text-sm mb-2">by {data.author}</p>
 
-            <p className="text-zinc-500 text-xs">
-              <span className="font-semibold">Updated:</span>{" "}
-              {new Date(data.updatedAt).toLocaleDateString()}
-            </p>
+          <div className="flex items-center justify-between mt-auto">
+            <div>
+              <p className="text-indigo-600 font-bold text-lg">
+                ₹{typeof data.price === 'number' ? data.price.toLocaleString() : 'N/A'}
+              </p>
+              {data.category && (
+                <span className="inline-block bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded">
+                  {data.category.name}
+                </span>
+              )}
+            </div>
+
+            <div className="flex space-x-2">
+              <button
+                className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Add to cart functionality here
+                }}
+              >
+                <FiShoppingCart size={18} />
+              </button>
+              <button
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                onClick={(e) => {
+                  handleAddToFavourites
+                }}
+              >
+                <FiHeart size={18} />
+              </button>
+            </div>
           </div>
-        </Wrapper>
+        </div>
+      </Wrapper>
 
-        {favourites && (
+      {favourites && (
+        <div className="p-4 border-t border-gray-100">
           <button
             onClick={handleRemoveBook}
-            className="mt-4 bg-red-600 hover:bg-red-700 text-white transition px-4 py-2 rounded text-sm font-medium"
+            className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            Remove from Favourites
-          </button>
-        )}
+            <FiTrash2 size={16} />
+            {isRemoveFavouriteLoading ? 'Removing' : 'Remove from Favorites'}
 
-      </div>
-    </>
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
+
+export default BookCard

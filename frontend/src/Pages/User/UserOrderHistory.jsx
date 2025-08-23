@@ -1,32 +1,22 @@
-// ✅ UserOrderHistory.jsx (Frontend)
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Loader } from '../../Components/common/Loader';
-import { Link, useNavigate } from 'react-router-dom';
-import { IoMdArrowRoundBack } from "react-icons/io";
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { FiPackage, FiClock, FiCheckCircle, FiXCircle, FiDollarSign } from 'react-icons/fi';
+import { BsBoxSeam, BsCreditCard } from 'react-icons/bs';
 
-export const UserOrderHistory = () => {
-  const { userid, token } = useSelector(state => state.auth);
-  const [orders, setOrders] = useState(null);
+// Components
+import Loader from '../../Components/common/Loader';
+import BackButton from '../../Components/common/BackButton';
+import { useGetOrderHistory } from '../../hooks/Order';
+
+const UserOrderHistory = () => {
   const navigate = useNavigate();
+  // const [orders, setOrders] = useState(null);
+  const { data, isLoading, isError, error } = useGetOrderHistory()
 
-  const headers = {
-    userid,
-    authorization: `Bearer ${token}`,
-  };
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await axios.get(`http://localhost:3000/api/order/get-user-orders`, { headers });
-        setOrders(res.data.data);
-      } catch (err) {
-        console.error("Failed to load orders:", err);
-      }
-    };
-    fetchOrders();
-  }, []);
+  const orders = data || [];
 
   const formatDate = (isoDate) => {
     const date = new Date(isoDate);
@@ -34,63 +24,118 @@ export const UserOrderHistory = () => {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
     });
   };
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'Delivered':
+        return <FiCheckCircle className="text-green-500" />;
+      case 'Cancelled':
+        return <FiXCircle className="text-red-500" />;
+      default:
+        return <FiClock className="text-yellow-500" />;
+    }
+  };
+
+  const getPaymentIcon = (method) => {
+    switch (method) {
+      case 'COD':
+        return <FiDollarSign className="text-gray-400" />;
+      default:
+        return <BsCreditCard className="text-blue-400" />;
+    }
+  };
+
   return (
-    <div className='p-4 text-zinc-100 min-h-[80vh]'>
-      <BackButton to={'/profile'} text='Back' />
-      <h1 className='text-3xl md:text-4xl font-bold text-zinc-500 mb-6'>Your Order History</h1>
+    <div className="bg-gray-50 min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <BackButton to="/profile" text="Back to Profile" />
 
-      {orders === null ? (
-        <div className='flex items-center justify-center h-[40vh]'><Loader /></div>
-      ) : orders.length === 0 ? (
-        <div className='flex flex-col items-center justify-center text-zinc-100'>
-          <h1 className='text-4xl text-zinc-500 mb-6'>No Order History</h1>
-          <img src="https://cdn-icons-png.flaticon.com/128/9961/9961218.png" alt="No orders" className='h-32' />
-        </div>
-      ) : (
-        <>
-          <div className='bg-zinc-800 rounded px-4 py-2 flex gap-2 text-sm md:text-base'>
-            <div className='w-[5%] text-center'>Sr.No</div>
-            <div className='w-[20%] text-center'>Book ID</div>
-            <div className='w-[30%] text-center'>Order ID</div>
-            <div className='w-[15%] text-center'>Date</div>
-            <div className='w-[10%] text-center'>Price</div>
-            <div className='w-[10%] text-center'>Status</div>
-            <div className='hidden md:block md:w-[10%] text-center'>Mode</div>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Your Order History</h1>
+          <div className="flex items-center gap-2 text-gray-500">
+            <FiPackage className="text-xl" />
+            <span>{orders?.length || 0} Orders</span>
           </div>
+        </div>
 
-          {orders.map((order, index) =>
-            order.books.map((bookItem, i) => (
-              <div
-                key={bookItem._id}
-                onClick={() => navigate(`/profile/trackOrder/${order._id}/${bookItem.bookid?._id}`)}
-                className='bg-zinc-800 hover:bg-zinc-900 rounded px-4 py-2 flex gap-2 text-sm md:text-base cursor-pointer mb-2'
-              >
-                <div className='w-[5%] text-center'>{index + 1}.{i + 1}</div>
-                <div className='w-[20%] text-center'>{bookItem.bookid?._id || "N/A"}</div>
-                <div className='w-[30%] text-center'>{order._id}</div>
-                <div className='w-[15%] text-center'>{formatDate(order.createdAt)}</div>
-                <div className='w-[10%] text-center'>₹{bookItem.price}</div>
-                <div className='w-[10%] text-center'>
-                  <span className={
-                    order.status === "Cancelled" ? 'text-red-500' :
-                      order.status === "Placed" ? 'text-yellow-500' :
-                        'text-green-500'
-                  }>
-                    {order.status}
-                  </span>
-                </div>
-                <div className='hidden md:block md:w-[10%] text-center'>{order.paymentMethod}</div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64"><Loader /></div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>
+        ) : orders?.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="mx-auto w-48 h-48 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <BsBoxSeam className="text-gray-400 text-6xl" />
+            </div>
+            <h2 className="text-2xl font-medium text-gray-700 mb-2">No Orders Yet</h2>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              You haven't placed any orders yet. Start shopping to see your order history here.
+            </p>
+            <button
+              onClick={() => navigate('/all-books')}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+            >
+              Browse Books
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div className="hidden md:block">
+              <div className="grid grid-cols-12 gap-4 bg-gray-100 px-6 py-3 text-sm font-medium text-gray-700 uppercase tracking-wider">
+                <div className="col-span-1">Order #</div>
+                <div className="col-span-2">Date</div>
+                <div className="col-span-3">Items</div>
+                <div className="col-span-2">Total</div>
+                <div className="col-span-2">Status</div>
+                <div className="col-span-2">Payment</div>
               </div>
-            ))
-          )}
-        </>
-      )}
+              {orders.map((order, index) => (
+                order.books.map((bookItem, idx) => (
+                  <div
+                    key={bookItem._id}
+                    onClick={() => navigate(`/profile/trackOrder/${order._id}/${bookItem.bookid?._id}`)}
+                    className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <div className="col-span-1 flex items-center text-gray-900 font-medium">
+                      #{index + 1}.{idx + 1}
+                    </div>
+                    <div className="col-span-2 flex items-center text-gray-600">
+                      {formatDate(order.createdAt)}
+                    </div>
+                    <div className="col-span-3 flex items-center">
+                      <img
+                        src={bookItem.bookid?.url}
+                        alt={bookItem.bookid?.title}
+                        className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                      />
+                    </div>
+                    <div className="col-span-2 flex items-center font-medium">
+                      ₹{bookItem.price.toFixed(2)}
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2">
+                      {getStatusIcon(order.status)}
+                      <span className={`${order.status === 'Delivered' ? 'text-green-600' :
+                        order.status === 'Cancelled' ? 'text-red-600' :
+                          'text-yellow-600'
+                        }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2 text-gray-600">
+                      {getPaymentIcon(order.paymentMethod)}
+                      <span>{order.paymentMethod}</span>
+                    </div>
+                  </div>
+                ))
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
+
+export default UserOrderHistory

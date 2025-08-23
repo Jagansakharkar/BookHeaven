@@ -1,4 +1,4 @@
-import { clearCart } from "./cartSlice"; 
+import { clearCart } from "./cartSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -7,15 +7,13 @@ export const fetchCart = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const state = thunkAPI.getState();
-      const { token, userid } = state.auth;
+      const { token, userId } = state.auth;
 
-      const response = await axios.get("http://localhost:3000/api/cart/get-user-cart", {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/cart/${userId}`, {
         headers: {
-          userid,
           Authorization: `Bearer ${token}`,
         }
       });
-      console.log(response.data.data)
       return {
         cartItems: response.data.data.books,
         message: response.data.message || ""
@@ -31,8 +29,7 @@ export const clearCartThunk = createAsyncThunk(
   "cart/clearCartThunk",
   async (_, { rejectWithValue, dispatch }) => {
     try {
-      await axios.delete("http://localhost:3000/api/user/cart/clear"); // ✅ Full URL preferred in dev
-      dispatch(clearCart()); // ✅ Clears state
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/cart/remove/${userId}`);
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to clear cart");
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
-export const Reviews = ({ bookid }) => {
+export const Reviews = ({ bookId }) => {
   const [reviews, setReviews] = useState([]);
   const [summary, setSummary] = useState(null);
   const [userReview, setUserReview] = useState(null);
@@ -11,10 +11,10 @@ export const Reviews = ({ bookid }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { userid, token } = useSelector(state => state.auth);
+  const { userId, token } = useSelector(state => state.auth);
 
   const headers = {
-    userid,
+    userId,
     Authorization: `Bearer ${token}`
   };
 
@@ -25,7 +25,7 @@ export const Reviews = ({ bookid }) => {
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/reviews/get-ratings/${bookid}`, { headers });
+      const res = await axios.get(`http://localhost:3000/api/reviews/${bookId}`, { headers });
       const data = res.data.data || [];
       setReviews(data);
 
@@ -40,7 +40,7 @@ export const Reviews = ({ bookid }) => {
 
   const fetchSummary = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/reviews/rating-summary/${bookid}`, { headers });
+      const res = await axios.get(`http://localhost:3000/api/reviews/summary/${bookId}`, { headers });
       setSummary(res.data.data);
     } catch (err) {
       console.error("Error fetching summary:", err);
@@ -53,7 +53,7 @@ export const Reviews = ({ bookid }) => {
 
     try {
       await axios.post(
-        `http://localhost:3000/api/reviews/rate-book/${bookid}`,
+        `http://localhost:3000/api/reviews/rate-book/${bookId}`,
         { rating, comment },
         { headers }
       );
@@ -105,111 +105,152 @@ export const Reviews = ({ bookid }) => {
   };
 
   return (
-    <div className="mt-10">
-      {/* Summary */}
+    <div className="mt-12 max-w-3xl mx-auto">
+      {/* Summary Section */}
       {summary && (
-        <div className="mb-5 bg-zinc-900 p-5 rounded-lg shadow text-white">
-          <h3 className="text-xl font-bold mb-2">⭐ {summary.average.toFixed(1)} / 5</h3>
-          <p className="text-sm mb-4 text-zinc-400">{summary.total} verified review{summary.total !== 1 && 's'}</p>
-          {[5, 4, 3, 2, 1].map(star => (
-            <div key={star} className="flex items-center mb-1 text-sm">
-              <span className="w-8">{star}★</span>
-              <div className="flex-1 bg-gray-700 h-2 mx-2 rounded">
-                <div
-                  className="bg-yellow-400 h-2 rounded"
-                  style={{
-                    width: summary.total ? `${(summary.breakdown[star] / summary.total) * 100}%` : '0%'
-                  }}
-                />
+        <div className="bg-white p-6 rounded-xl shadow-md mb-8 border border-gray-100">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="text-center">
+              <div className="text-5xl font-bold text-gray-900">{summary.average.toFixed(1)}</div>
+              <div className="flex justify-center mt-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} filled={i < Math.round(summary.average)} />
+                ))}
               </div>
-              <span className="text-zinc-300">{summary.breakdown[star] || 0}</span>
+              <p className="text-sm text-gray-500 mt-1">{summary.total} review{summary.total !== 1 && 's'}</p>
             </div>
-          ))}
+
+            <div className="flex-1 w-full">
+              {[5, 4, 3, 2, 1].map(star => (
+                <div key={star} className="flex items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700 w-8">{star}★</span>
+                  <div className="flex-1 bg-gray-100 h-2.5 mx-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-amber-400 h-full rounded-full"
+                      style={{
+                        width: summary.total ? `${(summary.breakdown[star] / summary.total) * 100}%` : '0%'
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm text-gray-500 w-8 text-right">{summary.breakdown[star] || 0}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
       {/* Review Form */}
-      <div className="bg-zinc-900 p-5 rounded-lg shadow text-white mb-8">
-        <h3 className="text-lg font-semibold mb-3">
+      <div className="bg-white p-6 rounded-xl shadow-md mb-8 border border-gray-100">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">
           {userReview ? (isEditing ? 'Edit Your Review' : 'Your Review') : 'Write a Review'}
         </h3>
 
-        <div className="flex gap-1 mb-3">
+        <div className="flex gap-1 mb-4">
           {[1, 2, 3, 4, 5].map(star => (
-            <Star key={star} filled={star <= rating} onClick={() => setRating(star)} />
+            <button
+              key={star}
+              onClick={() => setRating(star)}
+              className={`text-3xl ${star <= rating ? 'text-amber-400' : 'text-gray-300'} hover:scale-110 transition-transform`}
+            >
+              ★
+            </button>
           ))}
         </div>
 
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Write your comment here..."
-          className="w-full h-24 p-2 rounded bg-zinc-800 text-white resize-none mb-3 border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          placeholder="Share your thoughts about this book..."
+          className="w-full p-4 rounded-lg border border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+          rows={5}
           disabled={!isEditing && userReview}
         />
 
-        {userReview ? (
-          isEditing ? (
-            <div className="flex gap-3">
-              <button
-                onClick={handleReviewUpdate}
-                disabled={loading}
-                className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded"
-              >
-                {loading ? 'Updating...' : 'Update'}
-              </button>
-              <button onClick={() => setIsEditing(false)} className="text-zinc-400 underline">
-                Cancel
-              </button>
-            </div>
+        <div className="flex gap-3 mt-4">
+          {userReview ? (
+            isEditing ? (
+              <>
+                <button
+                  onClick={handleReviewUpdate}
+                  disabled={loading}
+                  className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-70"
+                >
+                  {loading ? 'Updating...' : 'Update Review'}
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+                >
+                  Edit Review
+                </button>
+                <button
+                  onClick={handleReviewDelete}
+                  className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors"
+                >
+                  Delete Review
+                </button>
+              </>
+            )
           ) : (
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleReviewDelete}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          )
-        ) : (
-          <button
-            onClick={handleReviewSubmit}
-            disabled={loading || !rating || !comment.trim()}
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded transition duration-200"
-          >
-            {loading ? 'Submitting...' : 'Submit Review'}
-          </button>
-        )}
+            <button
+              onClick={handleReviewSubmit}
+              disabled={loading || !rating || !comment.trim()}
+              className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-70"
+            >
+              {loading ? 'Submitting...' : 'Submit Review'}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Reviews */}
-      <div className="space-y-4">
+      {/* Reviews List */}
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Customer Reviews ({reviews.length})
+        </h3>
+
         {reviews.length === 0 ? (
-          <p className="text-zinc-400 text-sm">No reviews yet.</p>
+          <div className="text-center py-8">
+            <p className="text-gray-500">No reviews yet. Be the first to review!</p>
+          </div>
         ) : (
-          reviews.map(r => (
-            <div key={r._id} className="bg-zinc-800 p-4 rounded-lg text-white shadow">
-              <div className="flex items-center gap-3 mb-2">
+          reviews.map(review => (
+            <div key={review._id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div className="flex items-start gap-4">
                 <img
-                  src={r.userid?.avatar || "https://via.placeholder.com/40"}
-                  className="w-10 h-10 rounded-full border border-gray-700 object-cover"
-                  alt="User Avatar"
+                  src={review.userid?.avatar || "https://www.gravatar.com/avatar/default?s=200"}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-amber-100"
+                  alt={review.userid?.fullname || "Anonymous"}
                 />
-                <div>
-                  <p className="font-medium text-sm">{r.userid?.fullname || "Anonymous"}</p>
-                  <p className="text-yellow-400 text-sm">
-                    {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-gray-900">
+                      {review.userid?.fullname || "Anonymous"}
+                    </h4>
+                    <span className="text-sm text-gray-500">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex gap-1 my-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} filled={i < review.rating} />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 mt-1">
+                    {review.comment}
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-zinc-300">{r.comment}</p>
             </div>
           ))
         )}
@@ -218,12 +259,8 @@ export const Reviews = ({ bookid }) => {
   );
 };
 
-// Star sub-component
-const Star = ({ filled, onClick }) => (
-  <span
-    className={`cursor-pointer text-2xl ${filled ? 'text-yellow-400' : 'text-gray-500'}`}
-    onClick={onClick}
-  >
+const Star = ({ filled = false }) => (
+  <span className={`text-lg ${filled ? 'text-amber-400' : 'text-gray-300'}`}>
     ★
   </span>
 );

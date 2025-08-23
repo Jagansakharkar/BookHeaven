@@ -7,15 +7,14 @@ export const fetchCategories = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const state = thunkAPI.getState();
-      const { token, userid } = state.auth;
+      const { token } = state.auth;
 
-      const response = await axios.get('http://localhost:3000/api/category/get-all-categories', {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/category`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          userid
         }
       });
-      console.log(response.data.data)
+
       return {
         categories: response.data.data,
         message: response.data.message || ""

@@ -1,136 +1,173 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import Swal from 'sweetalert2';
 import { loginUser } from '../store/auth/authThunks';
+import { FiUser, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
+import BackButton from '../Components/common/BackButton';
+import Swal from 'sweetalert2';
 
-export const Login = () => {
+const Login = () => {
+  const [credentials, setCredentials] = useState({
+    username: '',
+    password: ''
+  });
+  const { role, loading } = useSelector(state => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [showPassword, setShowPassword] = useState(true)
-  const { loading, error, role } = useSelector(state => state.auth);
-
-  const [credential, setCredential] = useState({
-    username: "",
-    password: ""
-  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCredential(prev => ({ ...prev, [name]: value }));
+    setCredentials(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const { username, password } = credential;
-
-    if (!username || !password) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Credentials',
-        text: 'Username and password are required for login.'
-      });
-      return;
+    e.preventDefault()
+    if (!credentials.username || !credentials.password) {
+      Swal.fire({ icon: 'error', text: "Username And Password Required" })
     }
 
     try {
-      const resultAction = await dispatch(loginUser(credential));
-
-
-      if (loginUser.fulfilled.match(resultAction)) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Login Successful!',
-        });
-
-        { role === 'user' && setTimeout(() => navigate('/'), 3000) }
-        { role === 'admin' && setTimeout(() => navigate("/admin/dashboard")) }
-
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: resultAction.payload?.message || "Invalid credentials."
-        });
-
-        setTimeout(() => navigate('/login'), 3000);
+      const action = await dispatch(loginUser(credentials));
+      if (loginUser.fulfilled.match(action)) {
+        navigate(role === 'admin' ? '/admin/dashboard' : '/');
       }
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Oops!',
-        text: 'Something went wrong. Please try again.'
-      });
-
-      setTimeout(() => navigate('/login'), 3000);
+    } catch (error) {
+      Swal.fire({ icon: 'error', text: error })
     }
   };
 
-
   return (
-    <section className="bg-gray-50 dark:bg-gray-900">
-      <div className="absolute inset-0 backdrop-blur-none bg-black/50"></div>
-      <div className="backdrop-blur-sm flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <div className="w-full bg-white rounded-2xl shadow dark:border sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <h1 className="text-center text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-              Login
-            </h1>
-            <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center">
+            <FiUser className="text-white text-2xl" />
+          </div>
+        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Welcome back
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Sign in to your account
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+
+          <BackButton to={-1} text='Back' />
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiUser className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
-                  type="text"
-                  name="username"
                   id="username"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter your username"
-                  value={credential.username}
-                  onChange={handleChange}
+                  name="username"
+                  type="text"
                   required
+                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md"
+                  placeholder="your.username"
+                  value={credentials.username}
+                  onChange={handleChange}
                 />
               </div>
-              <div>
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiLock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
-                  type={showPassword ? "password" : "text"}
-                  name="password"
                   id="password"
-                  placeholder="••••••••"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  value={credential.password}
-                  onChange={handleChange}
+                  name="password"
+                  type={showPassword ? "text" : "password"}
                   required
+                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md"
+                  placeholder="••••••••"
+                  value={credentials.password}
+                  onChange={handleChange}
                 />
                 <button
-                  type='button' onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? "Show" : "Hide"} Password
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                  ) : (
+                    <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                  )}
                 </button>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-start">
-                  <input id="remember" type="checkbox" className="w-4 h-4 border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600" />
-                  <label htmlFor="remember" className="ml-2 text-sm text-gray-500 dark:text-gray-300">Remember me</label>
-                </div>
-                <Link to="/forgot-password" className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500"
-                >Forgot password?</Link>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  Remember me
+                </label>
               </div>
+
+              <div className="text-sm">
+                <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
+
+            <div>
               <button
                 type="submit"
-                className="w-full bg-blue-400 text-white hover:bg-blue-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5"
+                disabled={loading}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
               >
-                {loading ? 'Logging in...' : 'Log In'}
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
-              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Don’t have an account yet?{" "}
-                <Link to="/signUp" className="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign up</Link>
-              </p>
-              {error && <p className="text-sm text-red-500 mt-2 text-center">{error}</p>}
-            </form>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  New to our platform?
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Link
+                to="/signup"
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Create an account
+              </Link>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
+export default Login

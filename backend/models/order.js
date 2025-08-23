@@ -1,29 +1,42 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  userid: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     required: true
   },
   books: [
     {
-      bookid: { type: mongoose.Schema.Types.ObjectId, ref: 'books', required: true },
-      quantity: { type: Number, required: true },
-      price: { type: Number, required: true },
-      desc: String,
-      author: String,
-      title: String
+      book: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'books',
+        required: true
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: 0
+      }
     }
   ],
-  totalAmount: { type: Number, required: true },
+  totalAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
   address: {
-    name:{type:String,required:true},
+    name: { type: String, required: true, trim: true },
+    street: { type: String, required: true },
     city: { type: String, required: true },
     state: { type: String, required: true },
-    street: { type: String, required: true },
     pincode: { type: String, required: true },
-    phoneno: { type: String, required: true }
+    phone: { type: String, required: true }
   },
   status: {
     type: String,
@@ -32,7 +45,7 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['COD', 'Online'],
+    enum: ['COD', 'Card', 'UPI'],
     required: true
   },
   paymentStatus: {
@@ -40,9 +53,9 @@ const orderSchema = new mongoose.Schema({
     enum: ['Pending', 'Paid', 'Failed'],
     default: 'Pending'
   },
-  acceptedDelivery: {
-    type: Boolean,
-    default: false
+  deliveryDate: {
+    type: Date
   }
 }, { timestamps: true });
+
 module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);

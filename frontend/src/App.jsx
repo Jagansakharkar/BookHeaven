@@ -1,67 +1,158 @@
 import './App.css'
 
+import { Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { useEffect } from 'react'
-// auth
-import { Login } from "../src/auth/Login"
-import { SignUp } from "../src/auth/SignUp"
-import { ForgotPassword } from './auth/ForgotPassword'
-import { ResetPassword } from './auth/ResetPassword'
-//components
-import { Footer } from './Components/common/Footer'
-import { Header } from './Components/common/Header'
-import { AddressConfirmation } from './Components/User/AddressConfirmation'
+import { useEffect, lazy } from 'react'
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
-//pages
-import { Home } from './Pages/User/Home'
-import { AllBooks } from "./Pages/User/AllBooks"
-import { Cart } from './Pages/User/Cart'
-import { Profile } from './Pages/User/Profile'
-import { ViewBookDetails } from './Pages/User/ViewBookDetails'
-import { Favourites } from './Pages/User/Favourites'
-import { UserOrderHistory } from './Pages/User/UserOrderHistory'
-import { Setting } from './Pages/User/Setting'
-import { AllOrders } from './Pages/Admin/AllOrders'
-import { TrackOrder } from './Pages/User/TrackOrder'
-import { Contact } from './Pages/User/Contact'
-import { PersonalInformation } from './Pages/User/PersonalInformation'
-// import { AccountSecurity } from './Pages/User/AccountSecurity'
-import { AddressContact } from './Pages/User/AddressContact'
-import { Payment } from './Pages/User/Payment'
-import { OrderSummary } from './Pages/User/OrderSummary'
+const withDebug = (Component, name) => (props) => {
+  console.log(`Rendering ${name} with props:`, props);
+  try {
+    return <Component {...props} />;
+  } catch (error) {
+    console.error(`Error in ${name}:`, error);
+    throw error;
+  }
+};
 
-import { UpdateBook } from './Pages/Admin/UpdateBook'
-import { AddBook } from './Pages/Admin/AddBook'
-import { Dashboard } from './Pages/Admin/Dashboard'
-import { Analytics } from './Pages/Admin/Analytics'
-import { Orders } from './Pages/Admin/Orders'
-import { Customers } from './Pages/Admin/Customers'
-import { Inventory } from './Pages/Admin/Inventory'
-import { Settings as AdminSettings } from './Pages/Admin/Settings'
-import { EditOrder } from './Pages/Admin/EditOrder'
-import { EditBook } from './Pages/Admin/EditBook'
-import { EditCustomer } from './Pages/Admin/EditCustomer'
-import { AdminNotification } from './Pages/Admin/AdminNotification'
+// Modify your lazy imports:
+// const Login = lazy(() => import("../src/auth/Login").then(module => ({
+//   default: withDebug(module.default, 'Login')
+// })));
+// Auth Pages
+const Login = lazy(() => import("../src/auth/Login").then(module => ({
+  default: withDebug(module.default, 'Login')
+})));
+const SignUp = lazy(() => import("../src/auth/SignUp").then(module => ({
+  default: withDebug(module.default, 'SignUp')
+})));
+const ForgotPassword = lazy(() => import('./auth/ForgotPassword').then(module => ({
+  default: withDebug(module.default, 'ForgotPassword')
+})));
+const ResetPassword = lazy(() => import('./auth/ResetPassword').then(module => ({
+  default: withDebug(module.default, 'ResetPassword')
+})));
 
-import { AddCategory } from './Pages/Admin/AddCategory'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchCart } from './store/Cart/cartThunks'
-import { fetchAlertBooks } from './store/books/booksAlertThunks'
-import { fetchCategories } from './store/categories/categoryThunks'
-import { fetchBooks } from './store/books/authBooks'
+// Common Components
+const Footer = lazy(() => import('./Components/common/Footer').then(module => ({
+  default: withDebug(module.default, 'Footer')
+})));
+const Header = lazy(() => import('./Components/common/Header').then(module => ({
+  default: withDebug(module.default, 'Header')
+})));
+const AddressConfirmation = lazy(() => import('./Components/User/AddressConfirmation').then(module => ({
+  default: withDebug(module.default, 'AddressConfirmation')
+})));
+
+// User Pages
+const Home = lazy(() => import('./Pages/User/Home').then(module => ({
+  default: withDebug(module.default, 'Home')
+})));
+const AllBooks = lazy(() => import('./Pages/User/AllBooks').then(module => ({
+  default: withDebug(module.default, 'AllBooks')
+})));
+const Cart = lazy(() => import('./Pages/User/Cart').then(module => ({
+  default: withDebug(module.default, 'Cart')
+})));
+const Profile = lazy(() => import('./Pages/User/Profile').then(module => ({
+  default: withDebug(module.default, 'Profile')
+})));
+const BookDetails = lazy(() => import('./Pages/User/BookDetails').then(module => ({
+  default: withDebug(module.default, 'BookDetails')
+})));
+const Favourites = lazy(() => import('./Pages/User/Favourites').then(module => ({
+  default: withDebug(module.default, 'Favourites')
+})));
+const UserOrderHistory = lazy(() => import('./Pages/User/UserOrderHistory').then(module => ({
+  default: withDebug(module.default, 'UserOrderHistory')
+})));
+const Setting = lazy(() => import('./Pages/User/Setting').then(module => ({
+  default: withDebug(module.default, 'Setting')
+})));
+const TrackOrder = lazy(() => import('./Pages/User/TrackOrder').then(module => ({
+  default: withDebug(module.default, 'TrackOrder')
+})));
+const Contact = lazy(() => import('./Pages/User/Contact').then(module => ({
+  default: withDebug(module.default, 'Contact')
+})));
+const PersonalInformation = lazy(() => import('./Pages/User/PersonalInformation').then(module => ({
+  default: withDebug(module.default, 'PersonalInformation')
+})));
+const AddressContact = lazy(() => import('./Pages/User/AddressContact').then(module => ({
+  default: withDebug(module.default, 'AddressContact')
+})));
+const Payment = lazy(() => import('./Pages/User/Payment').then(module => ({
+  default: withDebug(module.default, 'Payment')
+})));
+const OrderSummary = lazy(() => import('./Pages/User/OrderSummary').then(module => ({
+  default: withDebug(module.default, 'OrderSummary')
+})));
+const Notification = lazy(() => import('./Pages/User/Notification').then(module => ({
+  default: withDebug(module.default, 'Notification')
+})));
+const AccountSecurity = lazy(() => import('./Pages/User/AccountSecurity').then(module => ({
+  default: withDebug(module.default, 'AccountSecurity')
+})));
+
+// Admin Pages
+const UpdateBook = lazy(() => import('./Pages/Admin/UpdateBook').then(module => ({
+  default: withDebug(module.default, 'UpdateBook')
+})));
+const AddBook = lazy(() => import('./Pages/Admin/AddBook').then(module => ({
+  default: withDebug(module.default, 'AddBook')
+})));
+const Dashboard = lazy(() => import('./Pages/Admin/Dashboard').then(module => ({
+  default: withDebug(module.default, 'Dashboard')
+})));
+const Analytics = lazy(() => import('./Pages/Admin/Analytics').then(module => ({
+  default: withDebug(module.default, 'Analytics')
+})));
+const Orders = lazy(() => import('./Pages/Admin/Orders').then(module => ({
+  default: withDebug(module.default, 'Orders')
+})));
+const Customers = lazy(() => import('./Pages/Admin/Customers').then(module => ({
+  default: withDebug(module.default, 'Customers')
+})));
+const Inventory = lazy(() => import('./Pages/Admin/Inventory').then(module => ({
+  default: withDebug(module.default, 'Inventory')
+})));
+const Settings = lazy(() => import('./Pages/Admin/Settings').then(module => ({
+  default: withDebug(module.default, 'Settings')
+})));
+const EditOrder = lazy(() => import('./Pages/Admin/EditOrder').then(module => ({
+  default: withDebug(module.default, 'EditOrder')
+})));
+const EditBook = lazy(() => import('./Pages/Admin/EditBook').then(module => ({
+  default: withDebug(module.default, 'EditBook')
+})));
+const EditCustomer = lazy(() => import('./Pages/Admin/EditCustomer').then(module => ({
+  default: withDebug(module.default, 'EditCustomer')
+})));
+const AdminNotification = lazy(() => import('./Pages/Admin/AdminNotification').then(module => ({
+  default: withDebug(module.default, 'AdminNotification')
+})));
+const AddCategory = lazy(() => import('./Pages/Admin/AddCategory').then(module => ({
+  default: withDebug(module.default, 'AddCategory')
+})));
+import { ProtectedRoute } from './auth/ProtectedRoute'
+import { fetchBooks } from './store/books/authBooks';
+import { fetchCart } from './store/Cart/cartThunks';
+import { fetchAlertBooks } from './store/books/booksAlertThunks';
+import { fetchCategories } from './store/categories/categoryThunks';
 function App() {
   const dispatch = useDispatch()
   const { role, token } = useSelector(state => state.auth)
   useEffect(() => {
-    if (token) {
-      dispatch(fetchBooks())
-      dispatch(fetchCart());
+    // if (token) {
+    dispatch(fetchBooks({ page: 1, limit: 12 }));
+    dispatch(fetchCart());
+    dispatch(fetchAlertBooks())
+    dispatch(fetchCategories());
+    // }
+  }, []);
 
 
-      dispatch(fetchAlertBooks())
-      dispatch(fetchCategories());
-    }
-  }, [dispatch, token]);
   return (
     <>
       <Header />
@@ -72,51 +163,57 @@ function App() {
         <Route path='/signUp' element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:id/:token" element={<ResetPassword />} />
-        <Route path='/payment' element={<Payment />} />
         <Route path='/contact' element={<Contact />} />
-        <Route path='/order-summary/:orderid' element={<OrderSummary />} />
-        <Route path='/cart' element={<Cart />} />
+
+        <Route path='/payment' element={
+          <ProtectedRoute><Payment /></ProtectedRoute>} />
+        <Route path='/order-summary/:orderId' element={
+          <ProtectedRoute><OrderSummary /></ProtectedRoute>} />
+
+        <Route path='/cart' element={
+          <ProtectedRoute><Cart /></ProtectedRoute>} />
+
         {/* <Route path='/all-orders' element={<AllOrders />} /> */}
-        <Route path='/view-book-details/:bookid' element={<ViewBookDetails />} />
-        <Route path='/address-confirmation' element={<AddressConfirmation />} />
+        <Route path='/view-book-details/:bookId' element={<BookDetails />} />
+        <Route path='/address-confirmation' element={<ProtectedRoute><AddressConfirmation /></ProtectedRoute>} />
 
         {role === 'user' &&
-          <Route path='/profile' element={<Profile />} >
+
+          <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} >
             <Route index element={<Favourites />} />
 
 
-            <Route path='/profile/orderHistory' element={<UserOrderHistory />} />
-            <Route path="/profile/settings" element={<Setting />} >
-              <Route path='/profile/settings/personal-info' element={<PersonalInformation />} />
-              {/* <Route path='/profile/settings/account-security' element={<AccountSecurity />} /> */}
-              <Route path='/profile/settings/address-contact' element={<AddressContact />} />
-
-              <Route path='/profile/settings/notification-setting' />
+            <Route path='orderHistory' element={<UserOrderHistory />} />
+            <Route path="settings" element={<Setting />} >
+              <Route path='personal-info' element={<PersonalInformation />} />
+              <Route path='account-security' element={<AccountSecurity />} />
+              <Route path='address-contact' element={<AddressContact />} />
+              <Route path='notification-setting' element={<Notification />} />
             </Route>
-            <Route path="/profile/trackOrder/:orderid/:bookid" element={<TrackOrder />
-            } />
+            <Route path="trackOrder/:orderId/:bookId" element={<TrackOrder />} />
           </Route>
         }
         {/* admin routes */}
-        <Route path='/updateBook/:bookid' element={<UpdateBook />} />
+        <Route path='/updateBook/:bookId' element={<UpdateBook />} />
         <Route path='/admin-notification' element={<AdminNotification />} />
         <Route path='/admin/dashboard' element={<Dashboard />} >
-          <Route path='/admin/dashboard/analytics' element={<Analytics />} />
-          <Route path='/admin/dashboard/orders' element={<Orders />} />
-          <Route path='/admin/dashboard/inventory' element={<Inventory />} />
-          <Route path='/admin/dashboard/customers' element={<Customers />} />
-          <Route path='/admin/dashboard/settings' element={<AdminSettings />} />
-          <Route path='/admin/dashboard/edit-order/:orderid' element={<EditOrder />} />
-          <Route path='/admin/dashboard/add-book' element={<AddBook />} />
-          <Route path="/admin/dashboard/edit-book/:bookid" element={<EditBook />} />
-          <Route path="/admin/dashboard/add-categories" element={<AddCategory />} />
-          <Route path='/admin/dashboard/edit-customer/:customerid' element={<EditCustomer />} />
+          <Route path='analytics' element={<Analytics />} />
+          <Route path='orders' element={<Orders />} />
+          <Route path='inventory' element={<Inventory />} />
+          <Route path='customers' element={<Customers />} />
+          <Route path='settings' element={<Settings />} />
+          <Route path='edit-order/:orderId' element={<EditOrder />} />
+          <Route path='add-book' element={<AddBook />} />
+          <Route path="edit-book/:bookId" element={<EditBook />} />
+          <Route path="add-categories" element={<AddCategory />} />
+          <Route path='edit-customer/:userId' element={<EditCustomer />} />
         </Route>
 
         {/* Not found route */}
-        <Route path='*' element={'Page Not Found'} />
+        <Route path='*' element={<div>Page Not Found</div>} />
 
       </Routes >
+      {/* </ErrorBoundary> */}
       {role === 'user' && <Footer />}
 
     </>

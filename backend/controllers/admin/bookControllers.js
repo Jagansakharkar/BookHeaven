@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const User = require("../../models/user");
 const Book = require("../../models/books");
+const slugify = require('slugify')
 
 //get all the books
 exports.getAllBooks = async (req, res) => {
@@ -19,66 +20,122 @@ exports.getAllBooks = async (req, res) => {
     });
   }
 }
+
 // add new books
 exports.addBook = async (req, res) => {
-  const { url, title, author, price, desc, language, category,publisher,publishedDate,pages } = req.body;
-  const userid = req.user.id
-
-  console.log(category)
   try {
+    const {
+      url, title, author, price, desc, language, category,
+      publisher, publishedDate, pages, isbn, isFeatured,
+      stock, formatType
+    } = req.body;
 
-    const user = await User.findById(userid);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    if (user.role !== "admin") return res.status(403).json({ success: false, message: "No admin access" });
+    const user = req.user; // You had `req.user.id`, but then used `user.role`, so changed it to `req.user`
 
-    const book = new Book({ url, title, author, price, desc, language, category,publisher,publishedDate,pages  });
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "No admin access" });
+    }
+
+    const slug = slugify(title, { lower: true, strict: true });
+
+    const book = new Book({
+      url,
+      title,
+      slug,
+      author,
+      price,
+      desc,
+      language,
+      category,
+      publisher,
+      publishedDate,
+      pages,
+      isbn,
+      isFeatured,
+      stock,
+      formats: [{
+        formatType,
+        price,
+        stock
+      }]
+    });
+
     await book.save();
-    res.status(200).json({ success: true, message: "Book added successfully" });
+
+    res.status(200).json({ success: true, message: "Book added successfully", data: book });
   } catch (error) {
     console.error("Error adding book:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
-}
+};
+
 // Update book 
+
 exports.updatedBook = async (req, res) => {
   try {
-    const { bookid } = req.params;
+    const { bookId } = req.params;
+    const {
+      url,
+      title,
+      author,
+      price,
+      desc,
+      stock,
+      language,
+      category,
+      publisher,
+      publishedDate,
+      pages,
+      isbn,
+      tags,
+      isFeatured,
+      formats
+    } = req.body;
+
+    // Generate slug from title
+    const slug = slugify(title, { lower: true });
 
     const updatedBook = await Book.findByIdAndUpdate(
-      bookid,
+      bookId,
       {
-        url: req.body.url,
-        title: req.body.title,
-        author: req.body.author,
-        price: req.body.price,
-        desc: req.body.desc,
-        stock: req.body.stock,
-        language: req.body.language,
-        category: req.body.category,
-        publisher:req.user.publisher,
-        publishedDate:req.body.publishedDate,
-        pages:req.body.pages
+        url,
+        title,
+        slug,
+        author,
+        price,
+        desc,
+        stock,
+        language,
+        category,
+        publisher,
+        publishedDate,
+        pages,
+        isbn,
+        tags,
+        isFeatured,
+        formats
       },
-
-      { new: true }
+      { new: true, runValidators: true }
     );
 
+    if (!updatedBook) {
+      return res.status(404).json({ success: false, message: "Book not found" });
+    }
 
-
-    res.status(200).json({ success: true, message: "Book updated successfully" });
+    res.status(200).json({ success: true, message: "Book updated successfully", book: updatedBook });
   } catch (error) {
     console.error("Error updating book:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
-}
+};
 
 // Delete book route
 exports.deleteBook = async (req, res) => {
   try {
-    const userid = req.user.id
-    const { bookid } = req.params
-    await Book.findByIdAndDelete(bookid);
-    
+
+    const { bookId } = req.params
+    await Book.findByIdAndDelete(bookId);
+
     return res.status(200).json({ success: true, message: "Book deleted successfully" });
   } catch (error) {
     console.error("Error deleting book:", error);

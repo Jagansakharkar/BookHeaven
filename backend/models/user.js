@@ -19,14 +19,19 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
-    match: /^\S+@\S+\.\S+$/ // basic email validation
+    match: /^\S+@\S+\.\S+$/
   },
   password: {
     type: String,
     required: true
   },
   address: {
-    phone: {
+    fullname:{
+      type:String,
+      required:true,
+      trim:true
+    }
+    ,phone: {
       type: String,
       required: true,
       match: /^[0-9]{10}$/
@@ -61,20 +66,9 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "books"
     }
-  ],
-  cart: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "cart"
-  },
-  orders: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "order"
-    }
   ]
 }, {
   timestamps: true
 });
-
 
 module.exports = mongoose.models.user || mongoose.model('user', userSchema);

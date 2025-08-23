@@ -4,14 +4,14 @@ const User = require("../../models/user");
 // Add book to favourite
 exports.addBookToFavourite = async (req, res) => {
   try {
-    const userid = req.user.id
-    const { bookid } = req.body
-    const userData = await User.findById(userid);
-    const isBookFavourite = userData.favourites.includes(bookid);
+
+    const { bookId,userId } = req.params
+    const userData = await User.findById(userId);
+    const isBookFavourite = userData.favourites.includes(bookId);
     if (isBookFavourite) {
       return res.status(200).json({ success: true, message: 'Book is already in favourites' });
     }
-    await User.findByIdAndUpdate(userid, { $push: { favourites: bookid } });
+    await User.findByIdAndUpdate(userId, { $push: { favourites: bookid } });
     return res.status(200).json({ success: true, message: "Book added to favourites" });
   } catch (error) {
     console.log(error);
@@ -23,18 +23,17 @@ exports.addBookToFavourite = async (req, res) => {
 
 exports.removeFromFavourite = async (req, res) => {
   try {
-    const userid = req.user.id;
-    const { bookid } = req.body;
+    const { bookId,userId } = req.params;
 
-    const userData = await User.findById(userid);
+    const userData = await User.findById(userId);
     if (!userData) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    const isBookFavourite = userData.favourites.includes(bookid);
+    const isBookFavourite = userData.favourites.includes(bookId);
     if (isBookFavourite) {
-      await User.findByIdAndUpdate(userid, {
-        $pull: { favourites: bookid },
+      await User.findByIdAndUpdate(userId, {
+        $pull: { favourites: bookId },
       });
       return res
         .status(200)
@@ -54,8 +53,8 @@ exports.removeFromFavourite = async (req, res) => {
 // Get favourite books
 exports.getFavouriteBooks = async (req, res) => {
   try {
-    const userid = req.user.id
-    const userData = await User.findById(userid).populate("favourites");
+    const {userId} = req.params
+    const userData = await User.findById(userId).populate("favourites");
     const favouriteBooks = userData.favourites;
 
     return res.json({

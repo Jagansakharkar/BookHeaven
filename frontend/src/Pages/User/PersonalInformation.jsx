@@ -1,19 +1,17 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { FaRegEdit } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
-import { IoMdArrowRoundBack } from "react-icons/io";
-import { useSelector } from 'react-redux'
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { useUpdateUserProfile } from '../../hooks/User';
+import BackButton from '../../Components/common/BackButton';
 
-export const PersonalInformation = () => {
-  const navigator = useNavigate()
-
-  const [originalValue, setOriginalValue] = useState({});
+const PersonalInformation = () => {
+  const { profile } = useOutletContext();
+  const [formData, setFormData] = useState(originalValue);
   const [isEditing, setIsEditing] = useState(false);
-  const { userid, token } = useSelector(state => state.auth)
+  const { mutate: updateProfile, isLoading: isProfileUpdating } = useUpdateUserProfile();
 
-  // initial personal information
-  const [value, setValue] = useState({
+  const [originalValue, setOriginalValue] = useState({
     fullname: "",
     email: "",
     address: "",
@@ -22,151 +20,160 @@ export const PersonalInformation = () => {
     BirthDate: ""
   });
 
-  const headers = {
-    userid: userid,
-    authorization: `Bearer ${token}`
-  };
 
+  // Initialize form data from profile
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await axios.get('http://localhost:3000/api/user/get-user-information', { headers });
-
-      const user = res.data;
-      setValue({
-        fullname: user.fullname,
-        email: user.email,
-        address: user.address,
-        gender: user.gender,
-        ContactNumber: user.ContactNumber,
-        BirthDate: user.BirthDate?.slice(0, 10)
-      });
-      setOriginalValue({ ...user, BirthDate: user.BirthDate?.slice(0, 10) });
-    };
-    fetchData();
-  }, []);
+    if (profile) {
+      const initialData = {
+        fullname: profile.fullname || "",
+        email: profile.email || "",
+        address: profile.address || "",
+        gender: profile.gender || "",
+        ContactNumber: profile.ContactNumber || "",
+        BirthDate: profile.BirthDate?.slice(0, 10) || ""
+      };
+      setFormData(initialData);
+      setOriginalValue(initialData);
+    }
+  }, [profile]);
 
   const handleChange = (e) => {
-    const { name, value: inputVal } = e.target;
-    setValue({ ...value, [name]: inputVal });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
-
-    try {
-      const res = await axios.post('http://localhost:3000/api/user/update-profile', value, { headers });
-
-      if (res.data.success) {
-        toast.success(res.data.message);
-        setOriginalValue(value);
+  const handleSave = () => {
+    updateProfile(formData, {
+      onSuccess: () => {
+        Swal.fire({
+          icon: 'success',
+          text: "Profile updated successfully!",
+          confirmButtonColor: '#3b82f6'
+        });
+        setOriginalValue(formData);
         setIsEditing(false);
-      } else {
-        toast.error(res.data.message);
+      },
+      onError: (error) => {
+        Swal.fire({
+          icon: 'error',
+          text: error.response?.data?.message || "Failed to update profile",
+          confirmButtonColor: '#3b82f6'
+        });
       }
-    } catch (error) {
-      toast.error("Failed to update profile.");
-    }
+    });
   };
 
   const handleCancel = () => {
-    setValue(originalValue);
+    setFormData(originalValue);
     setIsEditing(false);
   };
 
   return (
-    <>
-      {/* back button */}
-      <button onClick={() => navigator("/profile/settings")} className='px-8 py-3 text-2xl bg-blue-600 mb-4 flex items-center gap-1 text-zinc-300 hover:text-white'><IoMdArrowRoundBack /></button>
+    <div className="max-w-4xl mx-auto p-4">
+      <BackButton to="/profile/settings" text="Back to Settings" />
 
-      <div className='p-6 bg-zinc-900 text-white rounded-xl relative'>
-
-
-        <div className='absolute top-4 right-6 text-2xl cursor-pointer' onClick={() => setIsEditing(true)}>
-          <FaRegEdit />
+      <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-md overflow-hidden relative transition-all duration-300">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-700 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Personal Information</h2>
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              aria-label="Edit profile"
+            >
+              <FaRegEdit />
+              <span>Edit</span>
+            </button>
+          )}
         </div>
 
-        {/* personal infromation form */}
+        <form className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Form Fields */}
+          {[
+            { name: 'fullname', label: 'Full Name', type: 'text' },
+            { name: 'email', label: 'Email', type: 'email' },
+            { name: 'ContactNumber', label: 'Contact Number', type: 'text' },
+            { name: 'BirthDate', label: 'Birth Date', type: 'date' },
+          ].map((field) => (
+            <div key={field.name} className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {field.label}
+              </label>
+              <input
+                type={field.type}
+                name={field.name}
+                value={formData[field.name]}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 rounded-lg border ${isEditing
+                  ? 'border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700'
+                  : 'border-transparent bg-gray-100 dark:bg-zinc-700'
+                  } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                disabled={!isEditing}
+              />
+            </div>
+          ))}
 
-        <form className='grid grid-cols-2 gap-4'>
-          <div>
-            <label>First Name</label>
-            <input
-              type='text'
-              name='firstname'
-              value={value.fullname}
-              onChange={handleChange}
-              className='w-full p-2 bg-zinc-600 rounded'
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>
-            <label>Email</label>
-            <input
-              type='email'
-              name='email'
-              value={value.email}
-              onChange={handleChange}
-              className='w-full p-2 bg-zinc-600 rounded'
-              disabled={!isEditing}
-            />
-          </div>
-          <div>
-            <label>Contact Number</label>
-            <input
-              type='text'
-              name='ContactNumber'
-              value={value.ContactNumber}
-              onChange={handleChange}
-              className='w-full p-2 bg-zinc-600 rounded'
-              disabled={!isEditing}
-            />
-          </div>
-          <div>
-            <label>Birth Date</label>
-            <input
-              type='date'
-              name='BirthDate'
-              value={value.BirthDate}
-              onChange={handleChange}
-              className='w-full p-2 bg-zinc-600 rounded'
-              disabled={!isEditing}
-            />
-          </div>
-          <div>
-            <label>Gender</label>
+          {/* Gender Select */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
             <select
-              name='gender'
-              value={value.gender}
+              name="gender"
+              value={formData.gender}
               onChange={handleChange}
-              className='w-full p-2 bg-zinc-600 rounded'
+              className={`w-full px-4 py-2 rounded-lg border ${isEditing
+                ? 'border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700'
+                : 'border-transparent bg-gray-100 dark:bg-zinc-700'
+                } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
               disabled={!isEditing}
             >
-              <option value=''>Select</option>
-              <option value='Male'>Male</option>
-              <option value='Female'>Female</option>
-              <option value='Other'>Other</option>
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
             </select>
           </div>
-          <div className='col-span-2'>
-            <label>Address</label>
+
+          {/* Address Textarea */}
+          <div className="md:col-span-2 space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
             <textarea
-              name='address'
-              value={value.address}
+              name="address"
+              value={formData.address}
               onChange={handleChange}
-              className='w-full p-2 bg-zinc-600 rounded'
-              rows={4}
+              className={`w-full px-4 py-2 rounded-lg border ${isEditing
+                ? 'border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-700'
+                : 'border-transparent bg-gray-100 dark:bg-zinc-700'
+                } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+              rows={3}
               disabled={!isEditing}
             />
           </div>
 
+          {/* Action Buttons */}
           {isEditing && (
-            <div className='col-span-2 flex gap-4 justify-center mt-4'>
-              <button type='button' className='bg-green-600 px-6 py-2 rounded' onClick={handleSave}>Save</button>
-              <button type='button' className='bg-red-600 px-6 py-2 rounded' onClick={handleCancel}>Cancel</button>
+            <div className="md:col-span-2 flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-6 py-2 rounded-lg border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+                disabled={isUpdating}
+              >
+                {isProfileUpdating ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           )}
         </form>
       </div>
-    </>
+    </div>
   );
 };
+
+export default PersonalInformation;

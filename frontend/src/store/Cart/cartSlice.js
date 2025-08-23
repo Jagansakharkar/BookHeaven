@@ -11,14 +11,14 @@ const cartSlice = createSlice({
   },
   reducers: {
     updateQuantity: (state, action) => {
-      const { bookid, quantity } = action.payload;
-      const item = state.cartItems.find(item => item.bookid === bookid);
+      const { bookId, quantity } = action.payload;
+      const item = state.cartItems.find(item => item.book_id === bookId);
       if (item) {
         item.quantity = quantity;
       }
     },
     removeItem: (state, action) => {
-      state.cartItems = state.cartItems.filter(item => item.bookid !== action.payload); 
+      state.cartItems = state.cartItems.filter(item => item.book._id !== action.payload);
     },
     clearCart: (state) => {
       state.cartItems = [];

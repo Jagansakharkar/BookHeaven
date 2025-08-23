@@ -1,39 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
+import { useFetchOrderById } from '../../hooks/Order';
+import Swal from 'sweetalert2';
+import Loader from '../../Components/common/Loader';
 
-export const OrderSummary = () => {
+const OrderSummary = () => {
   const navigate = useNavigate();
-  const { orderid } = useParams();
-  const { userid, token } = useSelector(state => state.auth);
+  const { data: order, isLoading } = useFetchOrderById()
 
-  const [order, setOrder] = useState(null);
-
-  const headers = {
-    userid: userid,
-    authorization: `Bearer ${token}`
-  };
-
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:3000/api/order/get-order-byId/${orderid}`,
-          { headers }
-        );
-
-        setOrder(response.data.data);
-      } catch (error) {
-        console.error("Error fetching order:", error);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [orderid]);
-
-  if (!order) {
-    return <div className="text-center text-white mt-10">Loading...</div>;
+  if (isLoading) {
+    return <div className="text-center text-white mt-10"><Loader /></div>;
   }
 
   return (
@@ -43,9 +19,11 @@ export const OrderSummary = () => {
       <div className="bg-zinc-700 p-4 rounded mb-6">
         <h3 className="text-lg font-semibold mb-2">Order Details</h3>
         <p><strong>Order ID:</strong> {order._id}</p>
+        <p><strong>Book ID:</strong> {order.books[0].book._id}</p>
+
         <p><strong>Payment Method:</strong> {order.paymentMethod || 'Cash on Delivery'}</p>
         <p><strong>Total Amount:</strong> ₹{order.totalAmount}</p>
-        <p><strong>Estimated Delivery:</strong> {new Date(order.estimatedDelivery).toLocaleDateString() || 'N/A'}</p>
+        <p><strong>Estimated Delivery:</strong> {new Date(order.deliveryDate).toLocaleDateString() || 'N/A'}</p>
       </div>
 
       <div className="bg-zinc-700 p-4 rounded mb-6">
@@ -53,7 +31,7 @@ export const OrderSummary = () => {
         {order.address ? (
           <>
             <p><strong>Name:</strong> {order.address.name}</p>
-            <p><strong>Phone:</strong> {order.address.phoneno}</p>
+            <p><strong>Phone:</strong> {order.address.phone}</p>
             <p><strong>Street:</strong> {order.address.street}</p>
             <p><strong>City:</strong> {order.address.city}</p>
             <p><strong>Pincode:</strong> {order.address.pincode}</p>
@@ -78,3 +56,4 @@ export const OrderSummary = () => {
     </div>
   );
 };
+export default OrderSummary

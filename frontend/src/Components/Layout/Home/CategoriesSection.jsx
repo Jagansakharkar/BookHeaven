@@ -14,7 +14,7 @@ export const CategoriesSection = () => {
             key={cat._id}
             className="px-6 py-2 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition text-sm font-medium"
           >
-            {cat}
+            {cat.name}
           </button>
         ))}
       </div>

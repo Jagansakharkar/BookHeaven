@@ -19,7 +19,6 @@ exports.summary = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Inventory summary error:", error);
     res.status(500).json({
       success: false,
       message: "Error occurred while fetching inventory summary"
@@ -27,14 +26,12 @@ exports.summary = async (req, res) => {
   }
 }
 exports.getBooksAlert=async(req,res)=>{
- try{
-  
+ try{  
   const lowStockBooks=await Book.find({'stock':{$lt:10,$gt:0}}).select('_id title stock')
-      const outOfStock = await Book.find({ stock: 0 }).select('_id title stock');
+  const outOfStock = await Book.find({ stock: 0 }).select('_id title stock');
       
  res.status(200).json({success:true,lowStockBooks,outOfStock})
 }catch(error){
  res.status(500).json({success:false,message:"Interal Server Error"})
 }
-
 }

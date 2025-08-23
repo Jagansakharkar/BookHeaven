@@ -16,8 +16,7 @@ exports.addCategory = async (req, res) => {
     // Create new category
     const category = await Category.create({ name: name });
     
-
-    res.status(201).json({ success: true, message:"Category Added Successfully"});
+    res.status(201).json({ success: true, message:"Category Added Successfully",data:category});
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });

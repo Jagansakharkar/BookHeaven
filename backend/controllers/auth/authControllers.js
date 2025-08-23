@@ -1,5 +1,4 @@
 const express = require('express')
-
 const User = require("../../models/user")
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -14,11 +13,6 @@ exports.signup = async (req, res) => {
   const { fullname, username, email, password, address } = req.body
 
   try {
-    // Checking username length
-    if (username.length < 4) {
-      return res.status(400).json({ message: "Username length should be greater than 3" })
-    }
-
     // Check if username already exists
     const existingUsername = await User.findOne({ username })
     if (existingUsername) {
@@ -87,11 +81,12 @@ exports.login = async (req, res) => {
     // Generate and sign JWT token
     const token = jwt.sign(authClaims, process.env.SECRET_KEY, { expiresIn: "30d" })
 
+
     // Sign-in success response
     res.status(200).json({
       success: true,
       message: "Login Successfully",
-      userid: existingUser._id,
+      userId: existingUser._id,
       role: existingUser.role,
       token
     })
