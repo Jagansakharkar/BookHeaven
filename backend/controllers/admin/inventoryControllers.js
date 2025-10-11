@@ -9,7 +9,6 @@ exports.summary = async (req, res) => {
     const lowStock = await Book.countDocuments({ stock: { $lt: 10,$gt:0 } });
     const bookCategories = await Category.countDocuments();
 
-   console.log("summary",bookCategories)
     res.status(200).json({
       success: true,
       data: {

@@ -1,54 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import BackButton from '../../Components/common/BackButton';
 import Swal from 'sweetalert2';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCategories } from '../../store/Categories/categoryThunks';
 import { FaBook, FaUserEdit, FaDollarSign, FaBoxOpen, FaCalendarAlt, FaFileAlt, FaLanguage, FaArrowLeft, FaSave } from 'react-icons/fa';
 import { useBookById, useUpdateBook } from '../../hooks/Book';
+import Loader from '../../Components/common/Loader';
 
 const EditBook = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { bookid } = useParams();
+  const { bookId } = useParams();
   const [bookData, setBookData] = useState(null);
 
-  const { categories } = useSelector(state => state.categories);
-  const { mutate: bookById, isLoading, isError, error } = useBookById()
-  const { mutate: updateBook, isLoading: updating } = useUpdateBook()
-
+  const { categories, isLoading } = useSelector(state => state.categories);
+  const { data: book, isLoading: isFetchBookLoading, isError, error } = useBookById(bookId)
   useEffect(() => {
-    dispatch(fetchCategories());
-    const fetchBook = async () => {
-      try {
-        bookById(bookid,
-          {
-            onSuccess: (response) => {
-              setBookData(res.data.data);
-            },
-            onError: (response) => {
-              Swal.fire({
-                icon: 'error',
-                text: `Error fetching book: ${response.message}`,
-                background: '#18181b',
-                color: '#fff',
-                confirmButtonColor: '#3b82f6'
-              });
-            }
-          }
-        )
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          text: `Error fetching book: ${error.message}`,
-          background: '#18181b',
-          color: '#fff',
-          confirmButtonColor: '#3b82f6'
-        });
-      }
-    };
-    fetchBook();
-  }, [bookid, dispatch]);
+    if (bookData) {
+      setBook(book);   // update local state from API data
+    }
+  }, [bookId, book]);
+
+  const updateBookMutation = useUpdateBook()
+  if (isLoading) {
+    return <Loader />
+  }
 
   const handleChange = (field, value) => {
     setBookData(prev => ({ ...prev, [field]: value }));
@@ -71,7 +47,7 @@ const EditBook = () => {
 
     try {
 
-      updateBook(bookid, bookData, {
+      updateBookMutation.mutate(bookId, bookData, {
         onSuccess: (response) => {
           Swal.fire({
             icon: 'success',
@@ -103,13 +79,10 @@ const EditBook = () => {
     }
   };
 
-  if (!bookData) {
+  if (!isFetchBookLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-900">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white">Loading book data...</p>
-        </div>
+        <Loader />
       </div>
     );
   }
@@ -128,10 +101,7 @@ const EditBook = () => {
   return (
     <div className="min-h-screen bg-zinc-900 p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
-
         <BackButton to={"/admin/dashboard/inventory"} text='Back' />
-
-
         <div className="bg-zinc-800 rounded-xl shadow-lg overflow-hidden border border-zinc-700">
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
             <div className="flex items-center gap-3">
@@ -196,13 +166,13 @@ const EditBook = () => {
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={updating}
+                disabled={updateBookMutation.isPending}
                 className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${updating
                   ? 'bg-blue-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg'
                   }`}
               >
-                {updating ? (
+                {updatingMutation.isPending ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

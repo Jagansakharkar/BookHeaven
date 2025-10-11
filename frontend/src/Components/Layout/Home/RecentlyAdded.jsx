@@ -16,7 +16,7 @@ export const RecentlyAdded = () => {
       <h4 className='text-3xl text-yellow-100'>Recently Added Books</h4>
 
       {loading ? (
-        <div className='flex items-center justify-center my-8'>
+        <div className=''>
           <Loader />
         </div>
       ) : (

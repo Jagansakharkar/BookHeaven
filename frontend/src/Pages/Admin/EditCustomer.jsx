@@ -2,16 +2,22 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useParams, useNavigate } from 'react-router-dom';
-import  BackButton  from '../../Components/common/BackButton';
+import BackButton from '../../Components/common/BackButton';
 import { useFetchCustomers, useUpdateCustomer } from '../../hooks/customers';
 import { useUpdateBook } from '../../hooks/Book';
+import Loader from '../../Components/common/Loader';
 
 
 const EditCustomer = () => {
-  const { customerid } = useParams();
+  const { customerId } = useParams();
   const navigate = useNavigate();
-  const { mutate: fetchCustomer, isLoading, isError, error } = useFetchCustomers()
-  const { mutate: updateCustomer } = useUpdateCustomer()
+
+  const { data: customer, isLoading, isError, error } = useFetchCustomers()
+  const updateCustomerMutation = useUpdateCustomer()
+  // const { mutate: updateCustomer } = useUpdateCustomer()
+  if (isLoading) {
+    return <Loader />
+  }
   const [customerData, setCustomerData] = useState({
     fullname: '',
     username: '',
@@ -30,53 +36,53 @@ const EditCustomer = () => {
     }
   });
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        fetchCustomer(customerid,
-          {
-            onSuccess: (response) => {
-              const formattedDate = response.BirthDate
-                ? new Date(data.BirthDate).toISOString().split('T')[0]
-                : '';
-              setCustomerData({
-                fullname: data.fullname || '',
-                username: data.username || '',
-                email: data.email || '',
-                password: '',
-                avatar: data.avatar || '',
-                role: data.role || 'user',
-                BirthDate: formattedDate,
-                gender: data.gender || '',
-                address: {
-                  phone: data.address?.phone || '',
-                  street: data.address?.street || '',
-                  city: data.address?.city || '',
-                  state: data.address?.state || '',
-                  pincode: data.address?.pincode || ''
-                }
-              });
-            },
-            onError: (response) => {
-              Swal.fire({
-                icon: 'error',
-                title: 'Failed to fetch customer',
-                text: err.message
-              });
-            }
-          }
-        )
-      } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed to fetch customer',
-          text: err.message
-        });
-      }
-    };
+  // useEffect(() => {
+  //   const fetchCustomers = async () => {
+  //     try {
+  //       fetchCustomer(customerid,
+  //         {
+  //           onSuccess: (response) => {
+  //             const formattedDate = response.BirthDate
+  //               ? new Date(data.BirthDate).toISOString().split('T')[0]
+  //               : '';
+  //             setCustomerData({
+  //               fullname: data.fullname || '',
+  //               username: data.username || '',
+  //               email: data.email || '',
+  //               password: '',
+  //               avatar: data.avatar || '',
+  //               role: data.role || 'user',
+  //               BirthDate: formattedDate,
+  //               gender: data.gender || '',
+  //               address: {
+  //                 phone: data.address?.phone || '',
+  //                 street: data.address?.street || '',
+  //                 city: data.address?.city || '',
+  //                 state: data.address?.state || '',
+  //                 pincode: data.address?.pincode || ''
+  //               }
+  //             });
+  //           },
+  //           onError: (response) => {
+  //             Swal.fire({
+  //               icon: 'error',
+  //               title: 'Failed to fetch customer',
+  //               text: err.message
+  //             });
+  //           }
+  //         }
+  //       )
+  //     } catch (err) {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'Failed to fetch customer',
+  //         text: err.message
+  //       });
+  //     }
+  //   };
 
-    fetchCustomers();
-  }, [customerid, headers]);
+  //   fetchCustomers();
+  // }, [customerid, headers]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -102,7 +108,7 @@ const EditCustomer = () => {
     e.preventDefault();
     try {
 
-      updateCustomer(customerid, customerData, {
+      updateCustomerMutation(customerId, customerData, {
         onSuccess: (response) => {
           Swal.fire({
             icon: res.data.success ? 'success' : 'error',

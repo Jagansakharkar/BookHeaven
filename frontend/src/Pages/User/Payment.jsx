@@ -8,16 +8,15 @@ import { useLocation } from "react-router-dom";
 
 const Payment = () => {
   const navigate = useNavigate();
-  const { cartItems } = useSelector((state) => state.cart);
-  const [loading, setLoading] = useState(false);
   const location = useLocation();
+  const { cartItems, isLoading } = useSelector((state) => state.cart);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
   const { address } = location.state || {};
-  const { mutate: placeOrder, isLoading } = usePlaceOrder()
+  const placeOrderMutation = usePlaceOrder()
+  // const { mutate: placeOrder, isLoading } = usePlaceOrder()
   let [userAddress, setUserAddress] = useState({})
   userAddress = address ? address : []
-  const [paymentMethod, setPaymentMethod] = useState("COD");
 
-  console.log("cart item from payment", cartItems)
   // Calculate order total
   const orderTotal = cartItems.reduce(
     (total, item) => total + item.priceAtAdded * item.quantity,
@@ -31,7 +30,7 @@ const Payment = () => {
     }
 
     try {
-      placeOrder(paymentMethod, address, {
+      placeOrderMutation.mutate(paymentMethod, address, {
         onSuccess: (response) => {
           const orderId = response.orders[0]._id;
           Swal.fire({ icon: 'success', text: "Order placed successfully!" });
@@ -78,7 +77,7 @@ const Payment = () => {
                   type="text"
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   value={address.city}
-                  // onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                  onChange={(e) => setUserAddress({ ...address, city: e.target.value })}
                   required
                 />
               </div>
@@ -88,7 +87,7 @@ const Payment = () => {
                   type="text"
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   value={address.state}
-                  // onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                  onChange={(e) => setUserAddress({ ...address, state: e.target.value })}
                   required
                 />
               </div>
@@ -98,7 +97,7 @@ const Payment = () => {
                   type="text"
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   value={address.pincode}
-                  // onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+                  onChange={(e) => setUserAddress({ ...address, pincode: e.target.value })}
                   required
                 />
               </div>
@@ -108,7 +107,7 @@ const Payment = () => {
                   type="tel"
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   value={address.phone}
-                  // onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                  onChange={(e) => setUserAddress({ ...address, phone: e.target.value })}
                   required
                 />
               </div>
@@ -151,7 +150,7 @@ const Payment = () => {
           <button
             onClick={handlePayment}
             disabled={isLoading}
-            className={`w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center ${loading ? "opacity-75 cursor-not-allowed" : ""}`}
+            className={`w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center ${isLoading ? "opacity-75 cursor-not-allowed" : ""}`}
           >
             {isLoading ? (
               <>

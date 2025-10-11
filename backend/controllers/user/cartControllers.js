@@ -6,7 +6,8 @@ const Book = require("../../models/books");
 // Add book to cart (NO quantity increment)
 exports.addToCart = async (req, res) => {
   try {
-    const { userId, bookId } = req.params;
+    const { bookId } = req.params;
+    const userId=req.user.id
 
     if (!bookId) {
       return res.status(400).json({ success: false, message: "Book ID is required" });
@@ -29,7 +30,6 @@ exports.addToCart = async (req, res) => {
           priceAtAdded: book.price
         }]
       });
-      console.log("cart",cart)
 
       return res.status(201).json({ success: true, message: "Book added to new cart", data: cart });
     }
@@ -60,9 +60,8 @@ exports.addToCart = async (req, res) => {
 //  Remove book from cart
 exports.removeFromCart = async (req, res) => {
   try {
-    const { bookId,userId } = req.params;
-    
-
+    const { bookId } = req.params;
+const userId=req.user.id
     const cart = await Cart.findOne({ user: userId });
     if (!cart) {
       return res.status(404).json({ success: false, message: "Cart not found" });
@@ -78,12 +77,10 @@ exports.removeFromCart = async (req, res) => {
   }
 }
 
-
 //  Get user cart
 exports.getUserCart = async (req, res) => {
   try {
-    const { userId } = req.params;
-
+const userId=req.user.id
     // match with schema field name -> user
     const cart = await Cart.findOne({ user: userId }).populate("books.book");
 
@@ -94,8 +91,6 @@ exports.getUserCart = async (req, res) => {
         data: []
       });
     }
-
-    console.log("cart", cart);
 
     return res.status(200).json({
       success: true,
@@ -108,12 +103,10 @@ exports.getUserCart = async (req, res) => {
 };
 
 
-
-// routes/user/cart.js
 exports.clearCart = async (req, res) => {
   try {
-    const{userId}=req.params
-    await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
+const userId=req.user.id    
+await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
     res.status(200).json({ success: true, message: "Cart cleared" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to clear cart" });

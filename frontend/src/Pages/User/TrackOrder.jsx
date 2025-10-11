@@ -48,8 +48,8 @@ const TrackOrder = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Loader size="lg" />
+      <div >
+        <Loader  />
       </div>
     );
   }

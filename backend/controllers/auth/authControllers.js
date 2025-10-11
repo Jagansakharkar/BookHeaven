@@ -4,10 +4,6 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 
-require('dotenv').config()
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
 // Signup
 exports.signup = async (req, res) => {
   const { fullname, username, email, password, address } = req.body
@@ -56,6 +52,7 @@ exports.signup = async (req, res) => {
 // login
 exports.login = async (req, res) => {
   const { username, password } = req.body
+  console.log("username",username,password)
 
   try {
     // Check if the username exists
@@ -81,14 +78,21 @@ exports.login = async (req, res) => {
     // Generate and sign JWT token
     const token = jwt.sign(authClaims, process.env.SECRET_KEY, { expiresIn: "30d" })
 
-
+     res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        });
     // Sign-in success response
     res.status(200).json({
       success: true,
       message: "Login Successfully",
-      userId: existingUser._id,
-      role: existingUser.role,
-      token
+      data:{
+         userId:authClaims.id,
+         role:authClaims.role
+      }
+      
     })
   } catch (error) {
     res.status(500).json({ success: false, message: `Server Error: ${error.message}` }) // Respond with status 500 for server errors
@@ -103,7 +107,7 @@ exports.forgotPassword= async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "15m" });
+    const token = jwt.sign({ id: user._id },process.env.SECRET_KEY, { expiresIn: "15m" });
 
     const resetLink = `http://localhost:5173/reset-password/${user._id}/${token}`;
 
@@ -135,7 +139,7 @@ exports.resetPassword = async (req, res) => {
   const { newPassword } = req.body;
 
   try {
-    const verify = jwt.verify(token, JWT_SECRET);
+    const verify = jwt.verify(token, process.env.SECRET_KEY);
     const hashed = await bcrypt.hash(newPassword, 10);
     await User.findByIdAndUpdate(id, { password: hashed });
     res.json({ success: true, message: "Password updated successfully" });
@@ -144,3 +148,29 @@ exports.resetPassword = async (req, res) => {
   }
 }
 
+exports.getMe = async (req, res) => {
+    const token = req.cookies.token; 
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    try {
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const user = await User.findById(decoded.id).select('-password'); // Find user and exclude password
+        
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'User not found' });
+        }
+        
+        res.status(200).json({ success: true, user });
+    } catch (error) {
+        res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+};
+
+exports.logout=async(req,res)=>{
+  res.clearCookie("token");
+res.json({ success: true, message: "Logged out" });
+}

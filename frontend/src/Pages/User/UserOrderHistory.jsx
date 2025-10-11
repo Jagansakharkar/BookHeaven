@@ -18,6 +18,9 @@ const UserOrderHistory = () => {
 
   const orders = data || [];
 
+  if (isLoading) {
+    return <div><Loader /></div>
+  }
   const formatDate = (isoDate) => {
     const date = new Date(isoDate);
     return date.toLocaleString('en-IN', {

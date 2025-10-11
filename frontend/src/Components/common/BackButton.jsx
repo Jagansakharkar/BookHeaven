@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 const BackButton = ({ to = -1, text = "Back" }) => {
   const navigate = useNavigate();
-  console.log("text", text)
   return (
     <button
       onClick={() => navigate(to)}

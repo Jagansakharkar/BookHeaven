@@ -1,18 +1,18 @@
 const express = require('express')
 const router = express.Router()
-const {authenticateToken} = require('../../middleware/useAuth')
+const { authenticationToken} = require('../../middleware/useAuth')
 const { getAllBooks, addBook, updatedBook, deleteBook, bookSearch } = require('../../controllers/admin/bookControllers')
 
 //get all books
-router.get('/', authenticateToken, getAllBooks)
+router.get('/',  authenticationToken, getAllBooks)
 // add book
-router.post('/add', authenticateToken, addBook)
+router.post('/add',  authenticationToken, addBook)
 // update book
-router.put('/:bookId', authenticateToken, updatedBook)
+router.put('/:bookId',  authenticationToken, updatedBook)
 // delete book
-router.delete('/:bookId', authenticateToken, deleteBook)
+router.delete('/:bookId',  authenticationToken, deleteBook)
 // search book
-router.get('/search', authenticateToken, bookSearch)
+router.get('/search',  authenticationToken, bookSearch)
 
 
 module.exports=router

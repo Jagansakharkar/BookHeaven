@@ -5,7 +5,7 @@ const User = require("../../models/user");
 exports.getAllUsers = async (req, res) => {
   try {
     const allUsers = await User.find({ role: 'user' });
-
+console.log("allusers",allUsers)
     res.status(200).json({ success: true, data: allUsers });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -14,10 +14,9 @@ exports.getAllUsers = async (req, res) => {
 }
 
 exports.getUserById = async (req, res) => {
-  const { userId } = req.params
-
+const userId=req.user.id
   try {
-    const user = await User.find({ _id: userid })
+    const user = await User.find({ _id: userId })
     if (!user) {
       res.status(403).json({ success: true, message: "User Not Found" })
     }
@@ -73,7 +72,7 @@ exports.filterByGender = async (req, res) => {
 };
 
 exports.getUserAddress = async (req, res) => {
-  const { userId } = req.params
+const userId=req.user.id
   try {
     const user = await User.findById(userId)
     if (!user) {
@@ -89,7 +88,7 @@ exports.getUserAddress = async (req, res) => {
 
 exports.updateUserAddress = async (req, res) => {
   try {
-    const { userId } = req.params; // assuming middleware sets req.user
+const userId=req.user.id
     const {
       fullname,
       phone,
@@ -131,8 +130,7 @@ exports.updateUserAddress = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const {userid} = req.params; // from auth middleware
-
+const userId=req.user.id
     const {
       fullname,
       username,
@@ -180,7 +178,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 exports.deleteUser=async(req,res)=>{
-  const{userId}=req.params
+const userId=req.user.id
 try{
   const deleteUser=await User.findByIdAndDelete(userId)
   res.status(200).json({success:true,data:deleteUser})

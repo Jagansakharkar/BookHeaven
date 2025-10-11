@@ -1,11 +1,10 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import React, { useEffect, useState } from 'react';
-import   BackButton from '../../Components/common/BackButton';
+import BackButton from '../../Components/common/BackButton';
 import { FaEdit, FaUserPlus } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
 import { useNavigate, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { CiSearch, CiFilter } from "react-icons/ci";
 import { FiRefreshCw } from "react-icons/fi";
 import { useAllCustomers, useDeleteCustomer, useFilterByGender, useSearchUser } from '../../hooks/customers';
@@ -16,84 +15,17 @@ const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [gender, setGender] = useState('all');
-
-  const { mutate: getAllCustomers, isLoading, isError, error } = useAllCustomers()
-  const { mutate: deleteCustomer, isLoading, isError, error } = useDeleteCustomer()
-  const { mutate: filterByGender, isLoading, isError, error } = useFilterByGender()
-  const { mutate: searchUser, isLoading, isError, error } = useSearchUser()
-  // Fetch all customers
-  const fetchCustomers = async () => {
-    try {
-      getAllCustomers(
-        {
-          onSuccess: (response) => {
-            setCustomers(res.data.data);
-          },
-          onError: (response) => {
-            Swal.fire({
-              icon: 'error',
-              text: 'Failed to load customers',
-              background: '#1f2937',
-              color: '#fff',
-              confirmButtonColor: '#3b82f6'
-            });
-          }
-        }
-      )
-
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        text: 'Failed to load customers',
-        background: '#1f2937',
-        color: '#fff',
-        confirmButtonColor: '#3b82f6'
-      });
-    }
-  };
+  const { data: allCustomers, isLoading, isError, error } = useAllCustomers()
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
-
-  // Search customers
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      fetchCustomers();
-      return;
-    }
-
-    try {
-
-      searchUser(searchTerm,
-        {
-          onSuccess: (response) => {
-            setCustomers(response.data.data);
-          },
-          onError: (response) => {
-            Swal.fire({
-              icon: 'error',
-              text: 'Failed to search user',
-              background: '#1f2937',
-              color: '#fff',
-              confirmButtonColor: '#3b82f6'
-            });
-          }
-        }
-      )
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        text: 'Failed to search user',
-        background: '#1f2937',
-        color: '#fff',
-        confirmButtonColor: '#3b82f6'
-      });
-    }
-  };
+    setCustomers(allCustomers)
+  }, [allCustomers])
+  const deleteCustomerMutation = useDeleteCustomer()
+  const filterByGenderMutation = useFilterByGender()
+  const searchUserMutation = useSearchUser()
 
   // Delete customer
-  const handleDelete = async (userid) => {
+  const handleDelete = async () => {
     const confirm = await Swal.fire({
       title: 'Are you sure?',
       text: 'This will delete the customer permanently.',
@@ -108,10 +40,10 @@ const Customers = () => {
 
     if (confirm.isConfirmed) {
       try {
-        deleteCustomer(
+        deleteCustomerMutation.mutate(
           {
             onSuccess: (response) => {
-              setCustomers(customers.filter(c => c._id !== userid));
+              setCustomers(customers.filter(c => c._id !== userId));
               Swal.fire({
                 title: 'Deleted!',
                 text: 'Customer has been deleted.',
@@ -152,27 +84,27 @@ const Customers = () => {
     setGender(genderValue);
 
     if (genderValue === 'all') {
-      fetchCustomers(); // Reset to full list
+      // fetchCustomers(); // Reset to full list
       return;
     }
 
     try {
-      filterByGender(genderValue,
-        {
-          onSuccess: (response) => {
-            setCustomers(response.data.data);
-          },
-          onError: (response) => {
-            Swal.fire({
-              icon: 'error',
-              text: response.data.message,
-              background: '#1f2937',
-              color: '#fff',
-              confirmButtonColor: '#3b82f6'
-            });
-          }
-        }
-      )
+      filterByGenderMutation.mutate(genderValue)
+      //   {
+      //     onSuccess: (response) => {
+      //       setCustomers(response.data.data);
+      //     },
+      //     onError: (response) => {
+      //       Swal.fire({
+      //         icon: 'error',
+      //         text: response.data.message,
+      //         background: '#1f2937',
+      //         color: '#fff',
+      //         confirmButtonColor: '#3b82f6'
+      //       });
+      //     }
+      //   }
+      // )
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -258,7 +190,7 @@ const Customers = () => {
             {/* Action Buttons */}
             <div className="flex gap-2 w-full md:w-auto">
               <button
-                onClick={handleSearch}
+                // onClick={handleSearch}
                 disabled={isLoading}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
@@ -269,7 +201,7 @@ const Customers = () => {
                 onClick={() => {
                   setSearchTerm('');
                   setGender('all');
-                  fetchCustomers();
+                  // fetchCustomers();
                 }}
                 disabled={isLoading}
                 className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-zinc-600 dark:hover:bg-zinc-700 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition-colors"
@@ -311,7 +243,7 @@ const Customers = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-zinc-800 divide-y divide-gray-200 dark:divide-zinc-700">
-                {isLoading ? (
+                {filterByGenderMutation.isPending ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-4 text-center">
                       <div className="flex justify-center">

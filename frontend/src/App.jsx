@@ -7,7 +7,6 @@ import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 
 const withDebug = (Component, name) => (props) => {
-  console.log(`Rendering ${name} with props:`, props);
   try {
     return <Component {...props} />;
   } catch (error) {
@@ -140,18 +139,20 @@ import { fetchBooks } from './store/books/authBooks';
 import { fetchCart } from './store/Cart/cartThunks';
 import { fetchAlertBooks } from './store/books/booksAlertThunks';
 import { fetchCategories } from './store/categories/categoryThunks';
+import { getMe } from './store/auth/authThunks';
 function App() {
   const dispatch = useDispatch()
-  const { role, token } = useSelector(state => state.auth)
   useEffect(() => {
     // if (token) {
+    dispatch(getMe()); // fetch user on page refresh
     dispatch(fetchBooks({ page: 1, limit: 12 }));
     dispatch(fetchCart());
     dispatch(fetchAlertBooks())
     dispatch(fetchCategories());
     // }
-  }, []);
+  }, [dispatch]);
 
+  const { role, isLoggedIn } = useSelector(state => state.auth)
 
   return (
     <>

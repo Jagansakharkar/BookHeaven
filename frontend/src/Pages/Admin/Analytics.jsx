@@ -19,8 +19,6 @@ import { Pie, Bar, Line } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend);
 
 const Analytics = () => {
-  const { userid, token } = useSelector(state => state.auth);
-  const headers = { userid, authorization: `Bearer ${token}` };
 
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState({});
@@ -32,10 +30,10 @@ const Analytics = () => {
     const fetchAll = async () => {
       try {
         const [overviewRes, catRes, orderRes, revRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/admin/analytics/overview', { headers }),
-          axios.get('http://localhost:3000/api/admin/analytics/books-by-category', { headers }),
-          axios.get('http://localhost:3000/api/admin/analytics/orders-per-day', { headers }),
-          axios.get('http://localhost:3000/api/admin/analytics/revenue-per-day', { headers }),
+          axios.get('http://localhost:3000/api/admin/analytics/overview'),
+          axios.get('http://localhost:3000/api/admin/analytics/books-by-category'),
+          axios.get('http://localhost:3000/api/admin/analytics/orders-per-day'),
+          axios.get('http://localhost:3000/api/admin/analytics/revenue-per-day'),
         ]);
         setOverview(overviewRes.data.data);
         setBooksByCategory(catRes.data.data);

@@ -1,79 +1,73 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, registerUser } from "./authThunks";
-
-// Load persisted state from localStorage
-const token = localStorage.getItem("token");
-const userId = localStorage.getItem("id");
-const role = localStorage.getItem("role");
+import { registerUser, loginUser, getMe } from "./authThunks";
+import axios from "axios";
 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    isLoggedIn: !!token,
-    role: role || 'user',
-    userId: userId || null,
-    token: token || null,
+    isLoggedIn: false,
+    role: null,
     loading: false,
     error: null,
+    successMessage: null,
   },
   reducers: {
     logout(state) {
       state.isLoggedIn = false;
       state.role = null;
-      state.userId = null;
-      state.token = null;
-
-      // Clear localStorage
-      localStorage.removeItem("token");
-      localStorage.removeItem("id");
-      localStorage.removeItem("role");
+      
+      state.successMessage = null;
+      axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`, {});
+    },
+    clearError(state) {
+      state.error = null;
+    },
+    clearSuccess(state) {
+      state.successMessage = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
-      .addCase(registerUser.fulfilled, (state, { payload }) => {
+      .addCase(registerUser.fulfilled, (state, payload) => {
         state.loading = false;
-        state.isLoggedIn = true;
-        state.userId = payload.userId;
-        state.token = payload.token;
-        state.role = payload.role;
-
-        // Store to localStorage
-        localStorage.setItem("token", payload.token);
-        localStorage.setItem("id", payload.userId);
-        localStorage.setItem("role", payload.role);
+        state.successMessage = payload.message;
       })
-      .addCase(registerUser.rejected, (state, { payload }) => {
+      .addCase(registerUser.rejected, (state, payload) => {
         state.loading = false;
         state.error = payload;
       })
-
-      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
-      .addCase(loginUser.fulfilled, (state, { payload }) => {
+      .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.isLoggedIn = true;
-        console.log("log for slice",payload)
-        state.userId = payload.userId;
-        state.token = payload.token;
-        state.role = payload.role;
-
-        // Store to localStorage
-        localStorage.setItem("token", payload.token);
-        localStorage.setItem("id", payload.userId);
-        localStorage.setItem("role", payload.role);
+        state.role = action.payload.data.role;
+        state.successMessage = action.payload.message;
       })
-      .addCase(loginUser.rejected, (state, { payload }) => {
+      .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
+        state.error = action.payload;
+      })
+      .addCase(getMe.fulfilled, (state, action) => {
+
+        state.loading = false;
+        state.isLoggedIn = true;
+        state.role = action.payload.user.role;
+        state.error = null;
+      })
+      .addCase(getMe.rejected, (state, action) => {
+        state.loading = false;
+        state.isLoggedIn = false;
+        state.role = null;
+        state.error = action.payload || "Not authenticated";
       });
   },
 });

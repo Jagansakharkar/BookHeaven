@@ -2,14 +2,15 @@ import React from 'react';
 import Swal from 'sweetalert2';
 import BookCard from '../../Components/common/BookCard';
 import { useFavouriteBooks } from '../../hooks/Favourites';
+import Loader from '../../Components/common/Loader';
 
 const Favourites = () => {
   const { data, isLoading, isError, error } = useFavouriteBooks();
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex justify-center items-center">
-        <p className="text-2xl text-zinc-500">Loading favourites...</p>
+      <div className="">
+        <Loader/>
       </div>
     );
   }

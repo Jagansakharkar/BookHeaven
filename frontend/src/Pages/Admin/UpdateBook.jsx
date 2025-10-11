@@ -6,18 +6,19 @@ import { useSelector } from 'react-redux';
 import { FaBook, FaUserEdit, FaImage, FaLanguage, FaDollarSign, FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 
 // Components
-import  BackButton  from '../../Components/common/BackButton';
+import BackButton from '../../Components/common/BackButton';
 import { InputField } from '../../Components/common/InputField';
 import { TextAreaField } from '../../Components/common/TextAreaField';
 import { useBookById, useUpdateBook } from '../../hooks/Book';
+import Loader from '../../Components/common/Loader';
 
 const UpdateBook = () => {
   const navigate = useNavigate();
-  const { bookid } = useParams();
+  const { bookId } = useParams();
 
   const { mutate: bookById, isLoading } = useBookById()
-  const { mutate: updateBook, isLoading: isUpdateLoading } = useUpdateBook()
-
+  // const { mutate: updateBook, isLoading: isUpdateLoading } = useUpdateBook()
+const updateBookMutation=useUpdateBook()
   const [Data, setData] = useState({
     url: '',
     title: '',
@@ -33,7 +34,7 @@ const UpdateBook = () => {
     const fetchBook = async () => {
       try {
 
-        bookById(bookid, {
+        bookByIdMutation.mutate(bookId, {
           onSuccess: (response) => {
             const book = response.data
             setData({
@@ -67,7 +68,7 @@ const UpdateBook = () => {
 
       fetchBook();
     }
-  }, [bookid]);
+  }, [bookId]);
 
   const change = (e) => {
     const { name, value } = e.target;
@@ -90,7 +91,7 @@ const UpdateBook = () => {
     }
 
     try {
-      updateBook(bookid, Data, {
+      updateBookMutation.mutate(bookId, Data, {
         onSuccess: (response) => {
           Swal.fire({
             icon: 'success',
@@ -116,12 +117,7 @@ const UpdateBook = () => {
   };
   if (isLoading && !Data.title) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-900">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white">Loading book data...</p>
-        </div>
-      </div>
+   <Loader/>
     );
   }
 
@@ -251,7 +247,7 @@ const UpdateBook = () => {
             <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6">
               <button
                 type="button"
-                onClick={() => navigate(`/view-book-details/${bookid}`)}
+                onClick={() => navigate(`/view-book-details/${bookId}`)}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg transition-colors"
               >
                 <FaTimes />
@@ -259,13 +255,13 @@ const UpdateBook = () => {
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={updateBookMutation.isPending}
                 className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-colors ${loading
                   ? 'bg-blue-600 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
                   }`}
               >
-                {isUpdateLoading ? (
+                {updateBookMutation.isPending? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

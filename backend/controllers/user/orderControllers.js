@@ -5,13 +5,11 @@ const Book = require('../../models/books')
 
 exports.userOrdersHistory = async (req, res) => {
   try {
-    const {userId} = req.params; // user id from middleware/token
-
+const userId=req.user.id
     const userOrders = await Order.find({ user: userId })
       // .populate('books.book')  // get book details
       // .sort({ createdAt: -1 });    // newest orders first
 
-console.log("orders",userId)
 
     return res.status(200).json({
       success: true,
@@ -27,8 +25,8 @@ console.log("orders",userId)
 
 exports.cancelOrder = async (req, res) => {
   try {
-    const { orderId,userId } = req.params;
-
+    const { orderId} = req.params;
+const userId=req.user.id
     const order = await Order.findOne({ _id: orderId, userId: userId });
 
     if (!order) {
@@ -52,7 +50,8 @@ exports.cancelOrder = async (req, res) => {
 
 // controllers/orderController.js
 exports.trackOrder = async (req, res) => {
-  const { orderId,userId } = req.params;
+  const { orderId} = req.params;
+const userId=req.user.id
   const { bookId } = req.query;
   try {
    
@@ -96,12 +95,10 @@ exports.trackOrder = async (req, res) => {
   }
 };
 
-
 // GET all orders by user ID
 exports.getUserOrders = async (req, res) => {
   try {
-    const { userId } = req.params;
-
+const userId=req.user.id
     const orders = await Order.find({ userId: userId })
       .populate('books.book')
       .sort({ createdAt: -1 });
@@ -119,7 +116,7 @@ exports.getUserOrders = async (req, res) => {
 
 exports.placeOrder = async (req, res) => {
   try {
-    const {userId} = req.params;
+const userId=req.user.id
     const { paymentMethod, address } = req.body;
 
     // 1. Get user's cart
@@ -198,12 +195,10 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-
-
 exports.getOrderById = async (req, res) => {
   try {
-    const { orderId,userId } = req.params;
-
+    const { orderId } = req.params;
+const userId=req.user.id
     // Find order by ID and user, populate book info
     const order = await Order.findOne({
       _id: orderId,

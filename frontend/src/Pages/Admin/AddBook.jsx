@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCategories } from '../../store/Categories/categoryThunks';
 import { FaBook, FaUserEdit, FaImage, FaLanguage, FaDollarSign, FaBoxOpen, FaCalendarAlt, FaFileAlt } from 'react-icons/fa';
+import Loader from '../../Components/common/Loader';
 
 // Reusable components
 import { InputField } from '../../Components/common/InputField';
@@ -16,9 +17,9 @@ import { useAddBook } from '../../hooks/Book';
 const AddBook = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { categories } = useSelector((state) => state.categories);
-  const { mutate: addBook, isLoading, isError, error } = useAddBook()
-
+  const { categories,isLoading } = useSelector((state) => state.categories);
+  // const { mutate: addBook, isLoading, isError, error } = useAddBook()
+  const addBookMutation = useAddBook()
   const [Data, setData] = useState({
     url: "",
     title: "",
@@ -42,6 +43,9 @@ const AddBook = () => {
     setData({ ...Data, [name]: value });
   };
 
+  if(isLoading){
+    return <Loader/>
+  }
   const handleBookSubmit = (e) => {
     e.preventDefault();
 
@@ -62,7 +66,7 @@ const AddBook = () => {
       return;
     }
 
-    addBook(Data, {
+    addBookMutation.mutate(Data, {
       onSuccess: (response) => {
         Swal.fire({
           icon: 'success',
@@ -228,13 +232,13 @@ const AddBook = () => {
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={addBookMutation.isPending}
                 className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${loading
                   ? 'bg-yellow-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-md hover:shadow-lg'
                   }`}
               >
-                {isLoading ? (
+                {addBookMutation.isPending ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

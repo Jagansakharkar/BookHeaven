@@ -10,8 +10,6 @@ export const FeaturesSection = () => {
     { icon: <FaUndo />, title: 'Easy Returns', desc: 'Return any product within 7 days hassle-free.' },
   ];
 
-
-
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto text-center">

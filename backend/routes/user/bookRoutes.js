@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {authenticateToken }= require('../../middleware/useAuth')
+const { authenticationToken }= require('../../middleware/useAuth')
 const { getAllBooks, bookFilter, getBookById, search } = require('../../controllers/user/bookControllers')
 
 //get all books

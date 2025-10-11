@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const {authenticateToken} = require('../../middleware/useAuth')
+const { authenticationToken} = require('../../middleware/useAuth')
 const { summary,getBooksAlert } = require('../../controllers/admin/inventoryControllers')
 
-router.get('/summary', authenticateToken, summary)
-router.get('/books-alert',authenticateToken,getBooksAlert)
+router.get('/summary',  authenticationToken, summary)
+router.get('/books-alert', authenticationToken,getBooksAlert)
 
 module.exports=router

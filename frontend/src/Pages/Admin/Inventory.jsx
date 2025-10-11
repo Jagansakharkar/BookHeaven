@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEdit, FaBoxOpen, FaBook, FaExclamationTriangle } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
-import  BackButton  from '../../Components/common/BackButton';
+import BackButton from '../../Components/common/BackButton';
 import { CiSearch, CiFilter } from "react-icons/ci";
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchBooks } from '../../store/books/authBooks';
@@ -13,12 +13,16 @@ import { FiRefreshCw, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useInventorySummary } from '../../hooks/Inventory';
 import { useDeleteBook } from '../../hooks/Book';
 import { useFetchOrders } from '../../hooks/Order';
+import Loader from '../../Components/common/Loader';
 
 const Inventory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { books, currentPage, totalPages } = useSelector(state => state.book);
+  const { books, currentPage, totalPages, isLoading } = useSelector(state => state.book);
 
+  if (isLoading) {
+    return <Loader />
+  }
   const [search, setSearch] = useState('');
   // const [isLoading, setIsLoading] = useState(false);
   const [inventorySummary, setInventorySummary] = useState({
@@ -27,44 +31,44 @@ const Inventory = () => {
     lowStock: 0,
   });
 
-
   useEffect(() => {
     dispatch(fetchBooks({ page: currentPage, limit: 8 }));
   }, [dispatch, currentPage]);
 
-  const { mutate: getInventorySummary, isLoading } = useInventorySummary()
-  const { mutate: deleteBook, isLoading: isDeleteLoading } = useDeleteBook()
+  const { data: getInventorySummary, isLoading: isInventorySummaryLoading } = useInventorySummary()
+  // const { mutate: deleteBook, isLoading: isDeleteLoading } = useDeleteBook()
 
-  const fetchInventorySummary = async () => {
-    try {
-      getInventorySummary({
-        onSuccess: (response) => {
-          setInventorySummary(response.data);
-        },
-        onError: (response) => {
-          Swal.fire({
-            icon: 'error',
-            text: 'Failed to fetch inventory summary',
-            background: '#1f2937',
-            color: '#fff',
-            confirmButtonColor: '#3b82f6'
-          });
-        }
-      })
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        text: 'Failed to fetch inventory summary',
-        background: '#1f2937',
-        color: '#fff',
-        confirmButtonColor: '#3b82f6'
-      });
-    }
-  };
+  const deleteBookMutation = useDeleteBook()
+  // const fetchInventorySummary = async () => {
+  //   try {
+  //     getInventorySummary({
+  //       onSuccess: (response) => {
+  //         setInventorySummary(response.data);
+  //       },
+  //       onError: (response) => {
+  //         Swal.fire({
+  //           icon: 'error',
+  //           text: 'Failed to fetch inventory summary',
+  //           background: '#1f2937',
+  //           color: '#fff',
+  //           confirmButtonColor: '#3b82f6'
+  //         });
+  //       }
+  //     })
+  //   } catch (error) {
+  //     Swal.fire({
+  //       icon: 'error',
+  //       text: 'Failed to fetch inventory summary',
+  //       background: '#1f2937',
+  //       color: '#fff',
+  //       confirmButtonColor: '#3b82f6'
+  //     });
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchInventorySummary();
-  }, []);
+  // useEffect(() => {
+  //   fetchInventorySummary();
+  // }, []);
 
   const handleSearch = async () => {
     if (!search.trim()) {
@@ -72,7 +76,7 @@ const Inventory = () => {
       return;
     }
     try {
-     ;
+      ;
       const res = await axios.get(`http://localhost:3000/api/admin/books/book/search?title=${search}`, { headers });
       dispatch({ type: 'book/setBooks', payload: { books: res.data.data, pagination: { currentPage: 1, totalPages: 1 } } })
     } catch (error) {
@@ -83,14 +87,15 @@ const Inventory = () => {
         color: '#fff',
         confirmButtonColor: '#3b82f6'
       });
-    } 
+    }
   };
 
-  const handlebookEdit = (bookid) => {
-    navigate(`/admin/dashboard/edit-book/${bookid}`);
+  const handlebookEdit = (bookId) => {
+    alert(bookId)
+    navigate(`/admin/dashboard/edit-book/${bookId}`);
   };
 
-  const handlebookDelete = async (bookid) => {
+  const handlebookDelete = async (bookId) => {
     const confirm = await Swal.fire({
       icon: 'warning',
       title: 'Are you sure?',
@@ -105,7 +110,7 @@ const Inventory = () => {
 
     if (confirm.isConfirmed) {
       try {
-        deleteBook(bookid, {
+        deleteBookMutation.mutate(bookId, {
           onSuccess: (response) => {
             Swal.fire({
               title: 'Deleted!',
@@ -157,7 +162,7 @@ const Inventory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 p-4 md:p-6 ">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -242,7 +247,7 @@ const Inventory = () => {
                 disabled={isLoading}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
-                {isLoading ? <FiRefreshCw className="animate-spin" /> : <CiSearch />}
+                {/* {isLoading ? <FiRefreshCw className="animate-spin" /> : <CiSearch />} */}
                 <span className="hidden sm:inline">Search</span>
               </button>
               <button
@@ -263,7 +268,7 @@ const Inventory = () => {
         {/* Books Table */}
         <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-700 border border-zinc-800">
               <thead className="bg-gray-50 dark:bg-zinc-700">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">

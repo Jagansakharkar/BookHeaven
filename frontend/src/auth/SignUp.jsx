@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from '../store/auth/authThunks';
 import { FiEye, FiEyeOff, FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiHome, FiNavigation } from 'react-icons/fi';
 
-export const SignUp = () => {
+const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -282,3 +282,4 @@ export const SignUp = () => {
     </section>
   );
 };
+export default SignUp

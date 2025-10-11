@@ -10,8 +10,8 @@ const Profile = () => {
     return <><div>Failed To Fetch Data, Please try Again</div></>
   }
   if (isLoading) {
-    <div className='w-full flex items-center justify-center h-[60vh]'>
-      <Loader size="lg" />
+    <div >
+      <Loader />
     </div>
   }
   return (

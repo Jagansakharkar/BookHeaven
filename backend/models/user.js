@@ -26,12 +26,13 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   address: {
-    fullname:{
-      type:String,
-      required:true,
-      trim:true
-    }
-    ,phone: {
+    // fullname:{
+    //   type:String,
+    //   required:true,
+    //   trim:true
+    // }
+    // ,
+    phone: {
       type: String,
       required: true,
       match: /^[0-9]{10}$/

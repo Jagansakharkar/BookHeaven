@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { FiEdit2, FiArrowLeft, FiCheckCircle } from 'react-icons/fi';
 import { FaMapMarkerAlt, FaPhone, FaUser } from 'react-icons/fa';
 import { useGetUserAddress } from '../../hooks/User';
+import Loader from '../../Components/common/Loader'
 
 const AddressConfirmation = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const AddressConfirmation = () => {
     }
 
     const requiredFields = {
-      fullname: address.name,
+      fullname: address.fullname,
       phone: address.phone,
       street: address.street,
       city: address.city,
@@ -50,12 +51,7 @@ const AddressConfirmation = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white">Loading your address...</p>
-        </div>
-      </div>
+      <Loader />
     );
   }
 
@@ -87,7 +83,7 @@ const AddressConfirmation = () => {
                   <div className="space-y-3 pl-8">
                     <p className="flex items-start gap-3">
                       <span className="font-medium min-w-[80px]">Name:</span>
-                      <span>{address.name}</span>
+                      <span>{address.fullname}</span>
                     </p>
                     <p className="flex items-start gap-3">
                       <span className="font-medium min-w-[80px]">Phone:</span>
