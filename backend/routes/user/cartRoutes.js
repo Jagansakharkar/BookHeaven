@@ -1,17 +1,17 @@
 const router = require("express").Router();
-const { authenticateToken } = require('../../middleware/useAuth');
+const {  authenticationToken } = require('../../middleware/useAuth');
 const { addToCart, removeFromCart, getUserCart, clearCart } = require('../../controllers/user/cartControllers');
 
 // add to cart
-router.put('/add/:userId/:bookId', authenticateToken, addToCart);
+router.put('/:bookId',  authenticationToken, addToCart);
 
 // remove from cart
-router.delete('/remove/:userId/:bookId', authenticateToken, removeFromCart);
+router.delete('/:bookId',  authenticationToken, removeFromCart);
 
 // get all items in cart
-router.get('/:userId', authenticateToken, getUserCart);
+router.get('/',  authenticationToken, getUserCart);
 
 // clear cart
-router.delete('/clear/:userId', authenticateToken, clearCart);
+router.delete('/clear',  authenticationToken, clearCart);
 
 module.exports = router;

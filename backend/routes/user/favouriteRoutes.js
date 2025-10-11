@@ -1,13 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const {authenticateToken} = require('../../middleware/useAuth')
+const { authenticationToken} = require('../../middleware/useAuth')
 const { getFavouriteBooks, addBookToFavourite, removeFromFavourite } = require('../../controllers/user/favouriteControllers')
 
 // add book to favourite
-router.put('/add', authenticateToken, addBookToFavourite)
+router.put('/add',  authenticationToken, addBookToFavourite)
 //remove book
-router.put('/:userId/:bookId', authenticateToken, removeFromFavourite)
+router.put('/:bookId',  authenticationToken, removeFromFavourite)
 // get all favourite books
-router.get('/:userId', authenticateToken, getFavouriteBooks)
+router.get('/',  authenticationToken, getFavouriteBooks)
 
 module.exports = router;

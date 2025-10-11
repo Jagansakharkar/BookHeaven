@@ -6,10 +6,9 @@ const sendOrderStatusEmail = require("../../utils/sendEmail")
 
 exports.getAllOrders = async (req, res) => {
   try {
-
     const userOrders = await Order.find()
-      .populate('books.book')  // get book details
-      .sort({ createdAt: -1 });    // newest orders first
+      .populate('books.book')  
+      .sort({ createdAt: -1 });    
 
     return res.status(200).json({
       success: true,
@@ -22,7 +21,6 @@ exports.getAllOrders = async (req, res) => {
     });
   }
 }
-
 
 
 exports.changeOrderStatus = async (req, res) => {
@@ -48,7 +46,7 @@ exports.getOrderById = async (req, res) => {
   const { orderId } = req.params;
   try {
     const order = await Order.findById(orderId)
-      .populate('user')
+      .populate('user',"fullname")
       .populate('books.book');
 
     if (!order) {

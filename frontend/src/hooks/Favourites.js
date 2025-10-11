@@ -3,32 +3,26 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 
 export const useFavouriteBooks = () => {
-  const { token, userId } = useSelector(state => state.auth);
 
   return useQuery({
-    queryKey: ['favourite-books', userId],
+    queryKey: ['favourite-books'],
     queryFn: async () => {
-      const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/favourite/${userId}`,
-        { headers }
+        `${import.meta.env.VITE_BACKEND_URL}/api/favourite`,
       );
       return response.data.data;
     },
-    enabled: !!userId && !!token
+    enabled: !!token
   });
 };
 
 export const useAddFavouriteBook = () => {
-  const { token, userId } = useSelector(state => state.auth);
 
   return useMutation({
     mutationFn: async (bookId) => {
-      const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/favourite/add/${userId}/${bookId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/favourite/add/${bookId}`,
         {},
-        { headers }
       );
       return response.data;
     }
@@ -36,14 +30,11 @@ export const useAddFavouriteBook = () => {
 };
 
 export const useRemoveFromFravourite = () => {
-  const { token, userId } = useSelector(state => state.auth);
 
   return useMutation({
     mutationFn: async (bookId) => {
-      const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/favourite/${userId}/${bookId}`,
-        { headers }
+        `${import.meta.env.VITE_BACKEND_URL}/api/favourite/${bookId}`,
       );
       return response.data;
     }

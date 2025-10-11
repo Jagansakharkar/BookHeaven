@@ -1,24 +1,52 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
+import Loader from '../../Components/common/Loader'
 import Swal from 'sweetalert2';
 import { MdDeleteOutline, MdFilterList } from "react-icons/md";
 import { FaEdit, FaSearch, FaBox, FaShippingFast, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { useChangeOrderStatus, useDeleteOrder, useFetchOrders, useHandleOrderUpdate, useHandlePaymentStatusChange } from '../../hooks/Order';
 import BackButton from '../../Components/common/BackButton';
+
 const Orders = () => {
   const navigate = useNavigate();
-
-  let [order, setOrders] = useState({})
+  const [orders, setOrders] = useState([])
   const [originalOrders, setOriginalOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
-  const { data: fetchOrder, isLoading: isFetchOrderLoading } = useFetchOrders()
-  const { mutate: deleteOrder, isLoading: isDeleteOrderLoading } = useDeleteOrder()
-  const { mutate: changeOrderStatus, isLoading: isChangeOrderLoading } = useChangeOrderStatus()
-  const { mutate: handleOrderStatus, isLoading: isOrderPaymentStatusLoading } = useHandlePaymentStatusChange()
+  const { data: ordersData, isLoading: isFetchOrderLoading } = useFetchOrders()
+  const deleteOrderMutation = useDeleteOrder()
+  const changeOrderStatusMutation = useChangeOrderStatus()
+  const handleOrderStatusMutation = useHandlePaymentStatusChange()
 
-  order = fetchOrder ? fetchOrder : []
+  console.log("order",ordersData)
+  const allStatuses = ["Order Placed", "Packed", "Shipped", "Out for Delivery", "Delivered", "Canceled"];
+  const paymentStatuses = ["Pending", "Paid", "Failed"];
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Delivered': return 'bg-green-500/20 text-green-400';
+      case 'Canceled': return 'bg-red-500/20 text-red-400';
+      case 'Shipped':
+      case 'Out for Delivery': return 'bg-blue-500/20 text-blue-400';
+      case 'Packed': return 'bg-yellow-500/20 text-yellow-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+  const getPaymentStatusColor = (status) => {
+    switch (status) {
+      case 'Paid': return 'bg-green-500/20 text-green-400';
+      case 'Failed': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-yellow-500/20 text-yellow-400';
+    }
+  };
+  // set data initially
+  useEffect(() => {
+    if (ordersData) {
+      setOrders(ordersData);
+      setOriginalOrders(ordersData);
+    }
+  }, [ordersData]);
+
+
   const handleDelete = async (orderId) => {
     const confirm = await Swal.fire({
       icon: 'warning',
@@ -34,7 +62,7 @@ const Orders = () => {
 
     if (confirm.isConfirmed) {
       try {
-        deleteOrder(orderId,
+        deleteOrderMutation.mutate(orderId,
           {
             onSuccess: (response) => {
               setOrders(prev => prev.filter(o => o._id !== orderid));
@@ -72,13 +100,12 @@ const Orders = () => {
     }
   };
 
-  const handleStatusChange = async (orderid, e) => {
+  const handleStatusChange = async (orderId, e) => {
     const newStatus = e.target.value;
     try {
-
-      changeOrderStatus(orderid, newStatus, {
+      changeOrderStatusMutation.mutate(orderId, newStatus, {
         onSuccess: (response) => {
-          setOrders(prev => prev.map(o => o._id === orderid ? { ...o, status: newStatus } : o));
+          setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
           Swal.fire({
             icon: 'success',
             text: response.data.message,
@@ -109,12 +136,12 @@ const Orders = () => {
     }
   };
 
-  const handlePaymentStatusChange = async (orderid, e) => {
+  const handlePaymentStatusChange = async (orderId, e) => {
     const newStatus = e.target.value;
     try {
-      handleOrderStatus(orderid, newStatus, {
+      handleOrderStatusMutation.mutate(orderId, newStatus, {
         onSuccess: (response) => {
-          setOrders(prev => prev.map(o => o._id === orderid ? { ...o, paymentStatus: newStatus } : o));
+          setOrders(prev => prev.map(o => o._id === orderId ? { ...o, paymentStatus: newStatus } : o));
           Swal.fire({
             icon: 'success',
             text: response.data.message,
@@ -133,7 +160,6 @@ const Orders = () => {
           });
         }
       })
-
     } catch (err) {
       Swal.fire({
         icon: 'error',
@@ -144,9 +170,6 @@ const Orders = () => {
       });
     }
   };
-
-  const allStatuses = ["Order Placed", "Packed", "Shipped", "Out for Delivery", "Delivered", "Canceled"];
-  const paymentStatuses = ["Pending", "Paid", "Failed"];
 
   const handleFilter = (status) => {
     setActiveFilter(status);
@@ -162,38 +185,17 @@ const Orders = () => {
     setSearchTerm(term);
     const filtered = originalOrders.filter(order =>
       order._id.toLowerCase().includes(term) ||
-      (order.userid?.fullname?.toLowerCase().includes(term)) ||
+      (order.user?.fullname?.toLowerCase().includes(term)) ||
       order.books.some(book => book.title.toLowerCase().includes(term))
     );
     setOrders(filtered);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Delivered': return 'bg-green-500/20 text-green-400';
-      case 'Canceled': return 'bg-red-500/20 text-red-400';
-      case 'Shipped':
-      case 'Out for Delivery': return 'bg-blue-500/20 text-blue-400';
-      case 'Packed': return 'bg-yellow-500/20 text-yellow-400';
-      default: return 'bg-gray-500/20 text-gray-400';
-    }
-  };
-
-  const getPaymentStatusColor = (status) => {
-    switch (status) {
-      case 'Paid': return 'bg-green-500/20 text-green-400';
-      case 'Failed': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-yellow-500/20 text-yellow-400';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
+    <div className="h-auto bg-zinc-950 text-white p-4 md:p-8">
       <div className="max-w-screen-2xl mx-auto">
 
         <BackButton to={"/admin/dashboard"} text='Back to Dashboard' />
-
-
         <div className="bg-zinc-900 rounded-xl shadow-lg overflow-hidden border border-zinc-800">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6">
@@ -247,106 +249,111 @@ const Orders = () => {
           </div>
 
           {/* Orders Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-700">
-              <thead className="bg-zinc-800">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Order ID</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Customer</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Items</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Date</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Amount</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Payment</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-zinc-300 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-zinc-900 divide-y divide-zinc-800">
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan="8" className="px-6 py-4 text-center text-zinc-400">
-                      No orders found
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order) => (
-                    <tr key={order._id} className="hover:bg-zinc-800/50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-blue-400">{order._id.substring(0, 8)}...</div>
-                        <div className="text-xs text-zinc-400">{order.paymentMethod}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium">{order.userid?.fullname || "Unknown"}</div>
-                        <div className="text-xs text-zinc-400">{order.address?.phone}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          {order.books.slice(0, 2).map((b, idx) => (
-                            <div key={idx} className="mb-1">
-                              {b.title} <span className="text-zinc-400">(x{b.quantity})</span>
-                            </div>
-                          ))}
-                          {order.books.length > 2 && (
-                            <div className="text-xs text-blue-400">+{order.books.length - 2} more</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
-                        <div className="text-xs text-zinc-400">{new Date(order.createdAt).toLocaleTimeString()}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        ₹{order.totalAmount.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          className={`text-sm px-2 py-1 rounded ${getStatusColor(order.status)}`}
-                          value={order.status}
-                          onChange={(e) => handleStatusChange(order._id, e)}
-                        >
-                          {allStatuses.map(status => (
-                            <option key={status} value={status} className="bg-zinc-900">{status}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          className={`text-sm px-2 py-1 rounded ${getPaymentStatusColor(order.paymentStatus)}`}
-                          value={order.paymentStatus}
-                          onChange={(e) => handlePaymentStatusChange(order._id, e)}
-                        >
-                          {paymentStatuses.map(ps => (
-                            <option key={ps} value={ps} className="bg-zinc-900">{ps}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => navigate(`/admin/dashboard/edit-order/${order._id}`)}
-                            className="text-blue-400 hover:text-blue-300 p-1 rounded hover:bg-blue-900/30"
-                            title="Edit order"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(order._id)}
-                            className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-900/30"
-                            title="Delete order"
-                          >
-                            <MdDeleteOutline />
-                          </button>
-                        </div>
-                      </td>
+          {isFetchOrderLoading ? <div className='flex justify-center items-center h-full'> <Loader /></div>
+            :
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-zinc-700">
+                  <thead className="bg-zinc-800">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Order ID</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Customer</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Items</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Date</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Amount</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">Payment</th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-zinc-300 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="bg-zinc-900 divide-y divide-zinc-800">
+                    {orders.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="px-6 py-4 text-center text-zinc-400">
+                          No orders found
+                        </td>
+                      </tr>
+                    ) : (
+                      orders.map((order) => (
+                        <tr key={order._id} className="hover:bg-zinc-800/50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-blue-400">{order._id.substring(0, 8)}...</div>
+                            <div className="text-xs text-zinc-400">{order.paymentMethod}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium">{order.user.fullname || "Unknown"}</div>
+                            <div className="text-xs text-zinc-400">{order.address?.phone}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm">
+                              {order.books.slice(0, 2).map((b, idx) => (
+                                <div key={idx} className="mb-1">
+                                  {b.title} <span className="text-zinc-400">(x{b.quantity})</span>
+                                </div>
+                              ))}
+                              {order.books.length > 2 && (
+                                <div className="text-xs text-blue-400">+{order.books.length - 2} more</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
+                            <div className="text-xs text-zinc-400">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            ₹{order.totalAmount.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <select
+                              className={`text-sm px-2 py-1 rounded ${getStatusColor(order.status)}`}
+                              value={order.status}
+                              onChange={(e) => handleStatusChange(order._id, e)}
+                            >
+                              {allStatuses.map(status => (
+                                <option key={status} value={status} className="bg-zinc-900">{status}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <select
+                              className={`text-sm px-2 py-1 rounded ${getPaymentStatusColor(order.paymentStatus)}`}
+                              value={order.paymentStatus}
+                              onChange={(e) => handlePaymentStatusChange(order._id, e)}
+                            >
+                              {paymentStatuses.map(ps => (
+                                <option key={ps} value={ps} className="bg-zinc-900">{ps}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => navigate(`/admin/dashboard/edit-order/${order._id}`)}
+                                className="text-blue-400 hover:text-blue-300 p-1 rounded hover:bg-blue-900/30"
+                                title="Edit order"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(order._id)}
+                                className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-900/30"
+                                title="Delete order"
+                              >
+                                <MdDeleteOutline />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          }
         </div>
       </div>
     </div>
-  );
+  )
 };
 export default Orders

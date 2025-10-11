@@ -8,11 +8,12 @@ import { useSelector } from 'react-redux';
 const BookCard = ({ data, favourites }) => {
   const { isLoggedIn } = useSelector(state => state.auth)
   const bookId = data._id;
-  const { mutate: removeFromFavourite, isLoading: isRemoveFavouriteLoading, isError: isRemoveFavouriteError, error: removeFavouriteError }
-    = useRemoveFromFravourite()
-  const { mutate: addToFavourite, isLoading: isAddFavouriteLoading, isError: isAddFavouriteError, error: addFavouriteError }
-    = useAddFavouriteBook()
-
+  // const { mutate: removeFromFavourite, isLoading: isRemoveFavouriteLoading, isError: isRemoveFavouriteError, error: removeFavouriteError }
+  //   = useRemoveFromFravourite()
+  const removeFromFavouriteMutation = useRemoveFromFravourite()
+  // const { mutate: addToFavourite, isLoading: isAddFavouriteLoading, isError: isAddFavouriteError, error: addFavouriteError }
+  // = useAddFavouriteBook()
+  const addToFavouriteMutation = useAddFavouriteBook()
   const handleRemoveBook = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -29,7 +30,7 @@ const BookCard = ({ data, favourites }) => {
 
     if (result.isConfirmed) {
       try {
-        removeFromFavourite(bookId, {
+        removeFromFavouriteMutation.mutate(bookId, {
           onSuccess: (response) => {
             Swal.fire({
               icon: response.success ? 'success' : 'error',
@@ -59,7 +60,7 @@ const BookCard = ({ data, favourites }) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      addToFavourite(bookId,
+      addToFavouriteMutation.mutate(bookId,
         {
           onSuccess: (response) => {
             Swal.fire({
@@ -167,7 +168,7 @@ const BookCard = ({ data, favourites }) => {
             className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             <FiTrash2 size={16} />
-            {isRemoveFavouriteLoading ? 'Removing' : 'Remove from Favorites'}
+            {removeFromFavouriteMutation.isPending ? 'Removing' : 'Remove from Favorites'}
 
           </button>
         </div>

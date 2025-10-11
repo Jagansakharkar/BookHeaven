@@ -5,7 +5,8 @@ const User = require("../../models/user");
 exports.addBookToFavourite = async (req, res) => {
   try {
 
-    const { bookId,userId } = req.params
+    const { bookId} = req.params
+const userId=req.user.id
     const userData = await User.findById(userId);
     const isBookFavourite = userData.favourites.includes(bookId);
     if (isBookFavourite) {
@@ -23,8 +24,8 @@ exports.addBookToFavourite = async (req, res) => {
 
 exports.removeFromFavourite = async (req, res) => {
   try {
-    const { bookId,userId } = req.params;
-
+    const { bookId } = req.params;
+const userId=req.user.id
     const userData = await User.findById(userId);
     if (!userData) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -49,11 +50,10 @@ exports.removeFromFavourite = async (req, res) => {
   }
 }
 
-
 // Get favourite books
 exports.getFavouriteBooks = async (req, res) => {
   try {
-    const {userId} = req.params
+const userId=req.user.id
     const userData = await User.findById(userId).populate("favourites");
     const favouriteBooks = userData.favourites;
 

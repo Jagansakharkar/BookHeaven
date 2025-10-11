@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useSelector, useDispatch } from 'react-redux';
-import  BackButton  from '../../Components/common/BackButton';
+import BackButton from '../../Components/common/BackButton';
 import { useNavigate } from 'react-router-dom';
 import { fetchCategories } from '../../store/Categories/categoryThunks';
 import { FiPlusCircle, FiLoader } from 'react-icons/fi';
 import { useAddCategory } from '../../hooks/Category';
+import Loader from '../../Components/common/Loader';
 
 const AddCategory = () => {
   const dispatch = useDispatch();
   const navigator = useNavigate();
   const [categoryname, setCategoryName] = useState('');
 
-  const { categories } = useSelector(state => state.categories);
-  const { mutate: addCategory, isLoading, isError, error } = useAddCategory
-
+  const { categories, isLoading } = useSelector(state => state.categories);
+  // const { mutate: addCategory, isLoading, isError, error } = useAddCategory
+  const addCategoryMutation = useAddCategory()
+  if (isLoading) {
+    return <Loader />
+  }
   const handleAdd = async () => {
     if (!categoryname.trim()) {
       return Swal.fire({
@@ -28,7 +32,7 @@ const AddCategory = () => {
     }
 
     try {
-      addCategory(categoryname,
+      addCategoryMutation.mutate(categoryname,
         {
           onSuccess: (response) => {
             Swal.fire({
@@ -94,10 +98,10 @@ const AddCategory = () => {
             </div>
             <button
               onClick={handleAdd}
-              disabled={isLoading || !categoryname.trim()}
+              disabled={addCategoryMutation.isPending || !categoryname.trim()}
               className="mt-6 sm:mt-0 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {addCategoryMutation.isPending ? (
                 <>
                   <FiLoader className="animate-spin" />
                   <span>Adding...</span>

@@ -2,8 +2,7 @@ const router = require('express').Router();
 const User = require("../../models/user");
 
 exports.getUserById = async (req, res) => {
-  const { userId } = req.params
-
+const userId=req.user.id
   try {
     const user = await User.findById(userId )
     if (!user) {
@@ -18,7 +17,7 @@ exports.getUserById = async (req, res) => {
 }
 
 exports.getUserAddress = async (req, res) => {
-  const { userId } = req.params
+const userId=req.user.id
   try {
     const user = await User.findById(userId)
     if (!user) {
@@ -34,7 +33,7 @@ exports.getUserAddress = async (req, res) => {
 
 exports.updateUserAddress = async (req, res) => {
   try {
-    const { userId } = req.params; // assuming middleware sets req.user
+const userId=req.user.id
     const {
       fullname,
       phone,
@@ -43,7 +42,6 @@ exports.updateUserAddress = async (req, res) => {
       state,
       pincode
     } = req.body;
-    console.log("body",req.body)
 
     // Optional: validate fields here or use express-validator
 
@@ -77,8 +75,7 @@ exports.updateUserAddress = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const {userId} = req.params; // from auth middleware
-
+const userId=req.user.id
     const {
       fullname,
       username,
@@ -88,7 +85,6 @@ exports.updateProfile = async (req, res) => {
       gender
     } = req.body;
 
-    // Update fields only if they are present in the request
     const updateFields = {};
     if (fullname) updateFields.fullname = fullname;
     if (username) updateFields.username = username;

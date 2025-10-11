@@ -4,11 +4,11 @@ const Rating = require('../../models/rating')
 exports.rateBook = async (req, res) => {
   try {
     const { comment, rating } = req.body;
-    const userid = req.user.id;
-    const bookid = req.params.bookid
+const userId=req.user.id
+    const bookId = req.params.bookId
 
     //check if user already rated this book
-    const existing = await Rating.findOne({ userid: userid, bookid: bookid })
+    const existing = await Rating.findOne({ user: userId, book: bookId })
 
     if (existing) {
       existing.rating = rating
@@ -17,7 +17,7 @@ exports.rateBook = async (req, res) => {
       return res.status(200).json({ success: true, message: "Rating Updated" })
     }
 
-    const newRating = new Rating({ bookid: bookid, userid: userid, rating, comment })
+    const newRating = new Rating({ book: bookId, user: userId, rating, comment })
     await newRating.save()
     res.status(200).json({ success: true, message: "Rated Successfully" })
   } catch (error) {
@@ -28,7 +28,7 @@ exports.rateBook = async (req, res) => {
 exports.getRatings = async (req, res) => {
   try {
     const {bookId} = req.params
-    const ratings = await Rating.find({ bookId: bookId })
+    const ratings = await Rating.find({ book: bookId })
       .populate('user', "fullname avatar")
       .sort({ createdAt: -1 })
 
@@ -43,7 +43,7 @@ exports.ratingSummary = async (req, res) => {
   try {
     const {bookId} = req.params;
 
-    const ratings = await Rating.find({ bookId: bookId });
+    const ratings = await Rating.find({ book: bookId });
 
     let total = ratings.length;
     let sum = 0;
@@ -73,8 +73,8 @@ exports.ratingSummary = async (req, res) => {
 exports.updateReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
-    const {userId,reviewId} = req.params;
-
+    const {reviewId} = req.params;
+const userId=req.user.id
     const review = await Rating.findById(reviewId);
 
     if (!review) {
@@ -99,8 +99,8 @@ exports.updateReview = async (req, res) => {
 // delete review
 exports.deleteReview = async (req, res) => {
   try {
-    const {userId,reviewId} = req.params;
-
+    const {reviewId} = req.params;
+const userId=req.user.id
     const review = await Rating.findById(reviewId);
 
     if (!review) {

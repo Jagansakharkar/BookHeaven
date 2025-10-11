@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
-// Components
 import Loader from '../../Components/common/Loader';
-import { Reviews } from '../../Components/User/Reviews';
+// import { Reviews } from '../../Components/User/Reviews';
 import BackButton from '../../Components/common/BackButton';
 
-// Icons
 import { FaEdit, FaHeart, FaRegHeart, FaShoppingCart } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
 import { CiDeliveryTruck } from "react-icons/ci";
@@ -19,20 +17,19 @@ import { useSelector } from 'react-redux';
 const BookDetails = () => {
   const { bookId } = useParams()
   const navigate = useNavigate();
-
   // Proper use of hooks
   const { data: book, isLoading, error } = useBookById(bookId);
-  const { mutate: deleteBook } = useDeleteBook();
-  const { mutate: addToFavourite, data: favoriteData } = useAddFavouriteBook();
-  const { mutate: addToCart } = useAddToCart();
+  const deleteBookMutation = useDeleteBook()
+  const addToFavouriteMutation = useAddFavouriteBook()
+  const addToCartMutation = useAddToCart()
 
-  const { role, isLoggedIn, userId } = useSelector(state => state.auth)
+  const { role, isLoggedIn } = useSelector(state => state.auth)
 
   // Derived state for favorite status
-  const isFavorite = favoriteData?.isFavorite || false;
+  // const isFavorite = favoriteData?.isFavorite || false;
 
   const handleFavorite = async () => {
-    addToFavourite(bookId, {
+    addToFavouriteMutation.mutate(bookId, {
       onSuccess: () => {
         // State will update automatically through React Query
       },
@@ -49,7 +46,7 @@ const BookDetails = () => {
   const handleAddToCart = async () => {
     if (!book) return;
 
-    addToCart({ bookId, price: book.price }, {
+    addToCartMutation.mutate({ bookId, price: book.price }, {
       onSuccess: (response) => {
         Swal.fire({
           icon: "success",
@@ -83,7 +80,7 @@ const BookDetails = () => {
     });
 
     if (confirm.isConfirmed) {
-      deleteBook(bookId, {
+      deleteBookMutation.mutate(bookId, {
         onSuccess: (response) => {
           Swal.fire({
             icon: "success",
@@ -105,7 +102,6 @@ const BookDetails = () => {
     }
   };
 
-  if (isLoading) return <Loader />;
   // if (error) return <ErrorPage error={error} />;
   // if (!book) return <NotFound />;
 
@@ -121,9 +117,7 @@ const BookDetails = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Book not found</h2>
-
         <BackButton to={-1} text="Go back" />
-
       </div>
     );
   }
@@ -208,8 +202,8 @@ const BookDetails = () => {
                     onClick={handleFavorite}
                     className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors"
                   >
-                    {isFavorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
-                    {isFavorite ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                    {/* {isFavorite ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+                    {isFavorite ? 'Remove from Wishlist' : 'Add to Wishlist'} */}
                   </button>
                 </>
               )}
@@ -237,7 +231,7 @@ const BookDetails = () => {
         {/* Reviews Section */}
         <div className="mt-12 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
-          <Reviews bookId={bookId} userId={userId} />
+          {/* <Reviews bookId={bookId} /> */}
         </div>
       </div>
     </div>

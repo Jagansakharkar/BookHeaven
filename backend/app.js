@@ -1,22 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
 
+const cookieParser = require("cookie-parser");
+
+require('dotenv').config(); 
 // connection with database
 
 require('./connection/conn');
 
 const app = express();
 
+app.use(cookieParser());
 // cross origin policy
 
 const corsOptions = {
-  origin: "*",
-  // origin: 'http://localhost:5173', 
-  credentials: true,
+  origin: "http://localhost:5173",  
+  credentials: true,                
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ['Content-Type', 'Authorization', 'bookid', 'userid', 'orderid']
+  allowedHeaders: ["Content-Type", "Authorization", "bookid", "userid", "orderid"],
 };
 
 app.use(cors(corsOptions));

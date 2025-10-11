@@ -13,9 +13,13 @@ import { useRemoveFromCart, useUpdateQuantity } from '../../hooks/Cart';
 const Cart = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { cartItems, loading: isCartLoading } = useSelector((state) => state.cart);
-  const { mutate: updateItem, isLoading: isUpdatingItem } = useUpdateQuantity()
+  const { cartItems, loading } = useSelector((state) => state.cart);
+
+  // const { mutate: updateItem, isLoading: isUpdatingItem } = useUpdateQuantity()
+  const updateItemMutation = useUpdateQuantity()
   const { mutate: removeFromCart, isLoading: isRemoveFromCart } = useRemoveFromCart()
+  const removeFromCartMutation = useRemoveFromCart()
+
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
@@ -37,7 +41,7 @@ const Cart = () => {
 
     try {
 
-      removeFromCart(bookId, {
+      removeFromCartMutation.mutate(bookId, {
         onSuccess: (response) => {
           dispatch(removeItem(bookId));
           dispatch(fetchCart());
@@ -72,7 +76,7 @@ const Cart = () => {
 
     try {
 
-      updateItem(bookId, newQuantity,
+      updateItemMutation.mutate(bookId, newQuantity,
         {
           onSuccess: (response) => {
             // Then update Redux store
@@ -99,7 +103,7 @@ const Cart = () => {
 
   const total = cartItems.reduce((acc, item) => acc + item.priceAtAdded * item.quantity, 0);
 
-  if (isCartLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <Loader />
@@ -166,14 +170,14 @@ const Cart = () => {
                     value={item.quantity}
                     onChange={(e) => handleQuantityChange(item.book._id, Number(e.target.value))}
                     className="bg-gray-700 text-white px-3 py-1 rounded-md border border-gray-600 focus:ring-2 focus:ring-blue-500"
-                    disabled={isUpdatingItem === item.book._id}
+                    disabled={updateItemMutation.isPending === item.book._id}
                   >
                     {[1, 2, 3, 4, 5].map(qty => (
                       <option key={qty} value={qty}>{qty}</option>
                     ))}
                   </select>
 
-                  {isUpdatingItem === item.book._id ? (
+                  {updateItemMutation.isPending === item.book._id ? (
                     <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <button
@@ -208,16 +212,17 @@ const Cart = () => {
             </div>
 
             <button
-              onClick={() => navigate("/address-confirmation")}
-              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-              disabled={isUpdatingItem != null}
-            >
+              onClick={() => {
+                navigate("/address-confirmation")
+              }}
+              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              disabled={updateItemMutation.isPending}>
               Proceed to Checkout
             </button>
-          </div>
         </div>
       </div>
     </div>
+    </div >
   );
 };
 export default Cart

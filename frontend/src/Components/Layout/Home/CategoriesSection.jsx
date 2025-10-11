@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 
 export const CategoriesSection = () => {
-  const { categories, loading: catLoading } = useSelector(
+  const { categories, loading } = useSelector(
     (state) => state.categories
   );
 

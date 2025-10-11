@@ -13,7 +13,12 @@ class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      return <div className="error-fallback">Something went wrong</div>;
+      return <div className=" bg-red-500 text-center py-10 ">
+        <span className='text-4xl'>
+          Something went wrong, Please Check Your Internet Connection.Please try Again
+        </span>
+
+      </div>;
     }
     return this.props.children;
   }

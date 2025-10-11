@@ -31,8 +31,10 @@ const AllBooks = () => {
   const [sortType, setSortType] = useState("all");
   const [error, setError] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const { mutate: filterBook } = useBookFilter()
-  const { mutate: bookSearch } = useBookSearch()
+  // const { mutate: filterBook } = useBookFilter()
+  const filterBookMutation=useBookFilter()
+  const bookSearchMutation=useBookSearch()
+  // const { mutate: bookSearch } = useBookSearch()
 
   useEffect(() => {
     dispatch(fetchBooks({ page: 1, limit: 12 }));
@@ -55,7 +57,7 @@ const AllBooks = () => {
         params.append("page", page);
         params.append("limit", limit);
 
-        filterBook(params, {
+        filterBookMutation.mutate(params, {
           onSuccess: (response) => {
             setFiltered({
               books: response.data,
@@ -97,7 +99,7 @@ const AllBooks = () => {
     }
     try {
 
-      bookSearch(query,
+      bookSearchMutation.mutate(query,
         {
           onSuccess: (response) => {
             setFiltered({ books: res.data, currentPage: 1, totalPages: 1 });

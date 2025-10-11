@@ -11,7 +11,7 @@ const Login = () => {
     username: '',
     password: ''
   });
-  const { role, loading } = useSelector(state => state.auth);
+  const { role, loading, error } = useSelector(state => state.auth);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -22,20 +22,27 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
     if (!credentials.username || !credentials.password) {
-      Swal.fire({ icon: 'error', text: "Username And Password Required" })
+      return Swal.fire({ icon: 'error', text: "Username And Password Required" });
     }
 
-    try {
-      const action = await dispatch(loginUser(credentials));
-      if (loginUser.fulfilled.match(action)) {
+    const action = await dispatch(loginUser(credentials));
+
+    if (loginUser.fulfilled.match(action)) {
+      Swal.fire({ icon: 'success', text: "Login Successfully" })
+      setTimeout(() => {
         navigate(role === 'admin' ? '/admin/dashboard' : '/');
-      }
-    } catch (error) {
-      Swal.fire({ icon: 'error', text: error })
+      }, 3000)
+
+    }
+
+    if (loginUser.rejected.match(action)) {
+      Swal.fire({ icon: 'error', text: action.payload || "Login failed" });
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -49,7 +56,7 @@ const Login = () => {
           Welcome back
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Sign in to your account
+          LogIn to your account
         </p>
       </div>
 
@@ -139,7 +146,7 @@ const Login = () => {
                 className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-75 cursor-not-allowed' : ''
                   }`}
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? 'Logging in...' : 'LogIn'}
               </button>
             </div>
           </form>

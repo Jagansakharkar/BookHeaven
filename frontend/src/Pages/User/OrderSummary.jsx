@@ -9,7 +9,7 @@ const OrderSummary = () => {
   const { data: order, isLoading } = useFetchOrderById()
 
   if (isLoading) {
-    return <div className="text-center text-white mt-10"><Loader /></div>;
+    return <div ><Loader /></div>;
   }
 
   return (

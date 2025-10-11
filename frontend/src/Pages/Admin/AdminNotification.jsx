@@ -3,10 +3,14 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaExclamationTriangle, FaTimesCircle, FaBoxOpen, FaArrowLeft } from 'react-icons/fa';
 import  BackButton  from '../../Components/common/BackButton';
+import Loader from '../../Components/common/Loader';
 
 const AdminNotification = () => {
-  const { lowStockBooks, outofStockBooks } = useSelector(state => state.bookAlert);
+  const { lowStockBooks, outofStockBooks ,isLoading} = useSelector(state => state.bookAlert);
   const navigate = useNavigate();
+  if(isLoading){
+    return <Loader/>
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">

@@ -121,8 +121,6 @@ exports.getTopBooks = async (req, res) => {
   }
 };
 
-
-
 exports.getBooksByCategory = async (req, res) => {
   try {
     const books = await Book.aggregate([

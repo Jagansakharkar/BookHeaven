@@ -3,7 +3,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import  BackButton  from '../../Components/common/BackButton';
+import BackButton from '../../Components/common/BackButton';
 import { InputField } from '../../Components/common/InputField';
 import { TextAreaField } from '../../Components/common/TextAreaField';
 import { SelectField } from '../../Components/common/SelectField';
@@ -11,46 +11,48 @@ import { FiPackage, FiCreditCard, FiTruck, FiCheckCircle, FiUser } from 'react-i
 import { FaBoxOpen, FaMapMarkerAlt, FaPhoneAlt } from 'react-icons/fa';
 import { useFetchOrderById } from '../../hooks/Order';
 import { useUpdateBook } from '../../hooks/Book';
+import Loader from '../../Components/common/Loader';
 
 const EditOrder = () => {
-  const { orderid } = useParams();
+  const { orderId } = useParams();
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState(null);
-  const { mutate: fetchOrders, isError } = useFetchOrderById()
-  const { mutate: updateOrder, isLoading } = useUpdateBook()
+  const { data: fetchOrders, isLoading, isError } = useFetchOrderById()
+  const updateOrderMutation = useUpdateBook()
+  // const { mutate: updateOrder, isLoading } = useUpdateBook()
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        fetchOrders(orderid,
-          {
-            onSuccess: (response) => {
-              setOrderData(response.data);
-            },
-            onError: (response) => {
-              Swal.fire({
-                icon: 'error',
-                text: `Failed to fetch order: ${response.message}`,
-                background: '#1f2937',
-                color: '#fff',
-                confirmButtonColor: '#3b82f6'
-              });
-            }
-          }
-        )
+  // useEffect(() => {
+  //   const fetchOrder = async () => {
+  //     try {
+  //       fetchOrders(orderid,
+  //         {
+  //           onSuccess: (response) => {
+  //             setOrderData(response.data);
+  //           },
+  //           onError: (response) => {
+  //             Swal.fire({
+  //               icon: 'error',
+  //               text: `Failed to fetch order: ${response.message}`,
+  //               background: '#1f2937',
+  //               color: '#fff',
+  //               confirmButtonColor: '#3b82f6'
+  //             });
+  //           }
+  //         }
+  //       )
 
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          text: `Failed to fetch order: ${error.message}`,
-          background: '#1f2937',
-          color: '#fff',
-          confirmButtonColor: '#3b82f6'
-        });
-      }
-    };
-    fetchOrder();
-  }, [orderid]);
+  //     } catch (error) {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         text: `Failed to fetch order: ${error.message}`,
+  //         background: '#1f2937',
+  //         color: '#fff',
+  //         confirmButtonColor: '#3b82f6'
+  //       });
+  //     }
+  //   };
+  //   fetchOrder();
+  // }, [orderid]);
 
   const handleChange = (field, value) => {
     setOrderData({ ...orderData, [field]: value });
@@ -58,7 +60,7 @@ const EditOrder = () => {
 
   const handleUpdate = async () => {
     try {
-      updateOrder(orderid, orderData, {
+      updateOrderMutation.mutate(orderId, orderData, {
         onSuccess: (response) => {
           Swal.fire({
             icon: 'success',
@@ -90,6 +92,9 @@ const EditOrder = () => {
     }
   };
 
+  if(isLoading){
+    return <Loader/>
+  }
   if (!orderData) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -122,7 +127,7 @@ const EditOrder = () => {
                 </div>
                 <InputField
                   label="User ID"
-                  value={orderData.userid?._id || ''}
+                  value={orderData.user?._id || ''}
                   disabled
                   icon={<FiUser className="text-gray-400" />}
                 />
@@ -211,7 +216,7 @@ const EditOrder = () => {
                 disabled={isLoading}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
-                {isLoading ? (
+                {updateOrderMutation.isPending ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
