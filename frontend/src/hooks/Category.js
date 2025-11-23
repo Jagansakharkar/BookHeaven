@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { useSelector } from "react-redux";
 
 export const useAddCategory = () => {
   
@@ -9,7 +8,7 @@ export const useAddCategory = () => {
     
       
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/category`,
+        `${import.meta.env.REACT_APP_API_URL}/api/admin/category`,
         { name: categoryName },
       );
       return response.data;

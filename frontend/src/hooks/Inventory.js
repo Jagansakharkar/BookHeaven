@@ -7,7 +7,7 @@ export const useInventorySummary = () => {
     queryKey: ['inventory-summary'],  
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/inventory/summary`,
+        `${import.meta.env.REACT_APP_API_URL}/api/admin/inventory/summary`,
       );
       return response.data;
     },

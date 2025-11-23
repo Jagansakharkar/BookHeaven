@@ -6,7 +6,7 @@ export const useAddBook = () => {
   return useMutation({
     mutationFn: async (data) => {
       const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/books`,
+        `${import.meta.env.REACT_APP_API_URL}/api/admin/books`,
         data,
         { headers }
       );
@@ -20,7 +20,7 @@ export const useBookById = (bookId) => {
     queryKey: ['book', bookId],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/books/${bookId}`,
+        `${import.meta.env.REACT_APP_API_URL}/api/books/${bookId}`,
       );
       console.log("response",response)
       return response.data.data;
@@ -33,7 +33,7 @@ export const useUpdateBook = () => {
   return useMutation({
     mutationFn: async ({ bookId, data }) => {
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/books/${bookId}`,
+        `${import.meta.env.REACT_APP_API_URL}/api/admin/books/${bookId}`,
         data,
         { headers }
       );
@@ -46,7 +46,7 @@ export const useDeleteBook = () => {
   return useMutation({
     mutationFn: async (bookId) => {
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/books/${bookId}`,
+        `${import.meta.env.REACT_APP_API_URL}/api/admin/books/${bookId}`,
       );
       return response.data;
     }
@@ -58,7 +58,7 @@ export const useBookFilter = (params) => {
     queryKey: ['bookFiltered', params],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/books/books_filter`,
+        `${import.meta.env.REACT_APP_API_URL}/api/books/books_filter`,
         {
           params
         }
@@ -74,7 +74,7 @@ export const useBookSearch = (query) => {
     queryKey: ['bookSearched', query],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/books/search`,
+        `${import.meta.env.REACT_APP_API_URL}/api/books/search`,
         {
           params: { query: query.trim() }
         }

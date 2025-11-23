@@ -6,7 +6,7 @@ export const useAddToCart = () => {
   return useMutation({
     mutationFn: async ({ bookId, price }) => {
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/cart/${bookId}`,
+        `${import.meta.env.REACT_APP_API_URL}/api/cart/${bookId}`,
         { price },
       );
       return response.data;
@@ -22,7 +22,7 @@ export const useUpdateQuantity = () => {
 
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/cart/update-quantity/${bookId}`,
+        `${import.meta.env.REACT_APP_API_URL}/api/cart/update-quantity/${bookId}`,
         { quantity: newQuantity },
       );
       return response.data;
@@ -37,7 +37,7 @@ export const useRemoveFromCart = () => {
     mutationFn: async (bookId) => {
 
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/cart/${bookId}`,
+        `${import.meta.env.REACT_APP_API_URL}/api/cart/${bookId}`,
       );
       return response.data;
     }
@@ -53,7 +53,7 @@ export const useGetCartItems = () => {
 
 
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/cart`,
+        `${import.meta.env.REACT_APP_API_URL}/api/cart`,
         
       );
       return response.data;
