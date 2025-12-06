@@ -1,24 +1,24 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-export const useAllCustomers = () => {
+export const useAllUsers = () => {
   return useQuery({
-    queryKey: ['all-customers'],
+    queryKey: ['all-Users'],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/user`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/user/all`,
       );
+      console.log("users:", response.data.data)
       return response.data.data;
     },
   });
 };
 
-export const useDeleteCustomer = () => {
-
+export const useDeleteUser = () => {
   return useMutation({
     mutationFn: async () => {
       const response = await axios.delete(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/user`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/user`,
       );
       return response.data;
     }
@@ -26,11 +26,10 @@ export const useDeleteCustomer = () => {
 };
 
 export const useFilterByGender = () => {
-
   return useMutation({
     mutationFn: async (genderValue) => {
       const response = await axios.post(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/user/filter-gender`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/user/filter-gender`,
         { gender: genderValue },
       );
       return response.data;
@@ -39,12 +38,11 @@ export const useFilterByGender = () => {
 };
 
 export const useSearchUser = (searchTerm) => {
-
   return useQuery({
     queryKey: ['user-search', searchTerm],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/user/search`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/user/search`,
         {
           params: { term: searchTerm }
         }
@@ -55,26 +53,26 @@ export const useSearchUser = (searchTerm) => {
   });
 };
 
-export const useFetchCustomerById = () => {
-
+export const useFetchUserById = (userId) => {
   return useQuery({
-    queryKey: ['customer'],
+    queryKey: ['user'],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/user/get-customer-byId`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/user`, { params: { userId } }
       );
-      return response.data.data[0];
+      return response.data.data;
     },
+    enabled:!!userId
   });
 };
 
-export const useUpdateCustomer = () => {
+export const useUpdateUser = () => {
 
   return useMutation({
-    mutationFn: async ({ customerData }) => {
+    mutationFn: async ({ userId, customerData }) => {
       const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/update-customer`,
-        { ...customerData },
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/update-customer`,
+        { userId, ...customerData },
       );
       return response.data;
     }

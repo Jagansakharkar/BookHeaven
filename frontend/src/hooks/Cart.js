@@ -6,7 +6,7 @@ export const useAddToCart = () => {
   return useMutation({
     mutationFn: async ({ bookId, price }) => {
       const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_URL}/api/cart/${bookId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/cart/${bookId}`,
         { price },
       );
       return response.data;
@@ -16,14 +16,11 @@ export const useAddToCart = () => {
 
 // Update Quantity
 export const useUpdateQuantity = () => {
-
   return useMutation({
-    mutationFn: async ({ bookId, newQuantity }) => {
-
-
-      const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_URL}/api/cart/update-quantity/${bookId}`,
-        { quantity: newQuantity },
+    mutationFn: async ({ bookId, quantity }) => {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/cart/update-quantity/${bookId}`,
+        { quantity },
       );
       return response.data;
     }
@@ -32,12 +29,10 @@ export const useUpdateQuantity = () => {
 
 // Remove from Cart
 export const useRemoveFromCart = () => {
-
   return useMutation({
     mutationFn: async (bookId) => {
-
       const response = await axios.delete(
-        `${import.meta.env.REACT_APP_API_URL}/api/cart/${bookId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/cart/${bookId}`,
       );
       return response.data;
     }
@@ -46,18 +41,14 @@ export const useRemoveFromCart = () => {
 
 // Get Cart Items
 export const useGetCartItems = () => {
-
   return useQuery({
     queryKey: ['cart'],
     queryFn: async () => {
-
-
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/cart`,
-        
+        `${import.meta.env.VITE_BACKEND_URL}/api/cart`,
       );
       return response.data;
     },
-    enabled:  !!token
+
   });
 };

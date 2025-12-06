@@ -2,13 +2,14 @@ const express = require('express');
 const Book = require('../../models/books');
 const Category=require('../../models/Category')
 
-// GET /api/admin/inventory/summary
+
 exports.summary = async (req, res) => {
   try {
     const totalBooks = await Book.countDocuments();
-    const lowStock = await Book.countDocuments({ stock: { $lt: 10,$gt:0 } });
+    const lowStock = await Book.countDocuments({ stock: { $lt: 10, $gt: 0 } });
     const bookCategories = await Category.countDocuments();
 
+console.log(totalBooks,lowStock,bookCategories)
     res.status(200).json({
       success: true,
       data: {
@@ -17,13 +18,16 @@ exports.summary = async (req, res) => {
         bookCategories
       }
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Error occurred while fetching inventory summary"
+      message: "Failed to fetch inventory summary",
+      error: error.message,
     });
   }
-}
+};
+
 exports.getBooksAlert=async(req,res)=>{
  try{  
   const lowStockBooks=await Book.find({'stock':{$lt:10,$gt:0}}).select('_id title stock')

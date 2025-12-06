@@ -23,7 +23,7 @@ const AdminSidebar = () => {
 
   const navItems = [
     { path: "/admin/dashboard/analytics", icon: <FaChartLine />, label: "Analytics" },
-    { path: "/all-books", icon: <FaBook />, label: "All Books" },
+    { path: "/books", icon: <FaBook />, label: "All Books" },
     { path: "/admin/dashboard/orders", icon: <FaClipboardList />, label: "Orders" },
     { path: "/admin/dashboard/inventory", icon: <FaBoxes />, label: "Inventory" },
     { path: "/admin/dashboard/customers", icon: <FaUsers />, label: "Customers" },

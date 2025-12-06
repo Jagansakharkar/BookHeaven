@@ -7,8 +7,6 @@ import BackButton from '../../Components/common/BackButton';
 const AddressContact = () => {
   const navigator = useNavigate();
 
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
   const [address, setAddress] = useState({
     fullname: '',
     phone: '',
@@ -19,11 +17,19 @@ const AddressContact = () => {
   });
 
   const { data, isLoading: isFetching } = useGetUserAddress();
-  const { mutate: updateAddress } = useUpdateUserAddress();
+  const { mutate: updateAddress, isPending: isUpdating } = useUpdateUserAddress();
 
   useEffect(() => {
     if (data?.address) {
-      setAddress(data.address);
+      setAddress({
+        name: data.address.name||'',
+        phone: data.address.phone||'',
+        street: data.address.street||'',
+        city: data.address.city||'',
+        state: data.address.state||'',
+        pincode: data.address.pincode||'',
+
+      });
     }
   }, [data]);
 
@@ -33,8 +39,6 @@ const AddressContact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage('');
 
     updateAddress(address, {
       onSuccess: () => {
@@ -46,8 +50,6 @@ const AddressContact = () => {
           background: '#18181b',
           color: '#fff'
         });
-        
-        setLoading(false);
       },
       onError: (error) => {
         Swal.fire({
@@ -58,7 +60,6 @@ const AddressContact = () => {
           background: '#18181b',
           color: '#fff'
         });
-        setLoading(false);
       }
     });
   };
@@ -92,7 +93,7 @@ const AddressContact = () => {
                   name="name"
                   value={address.name || ''}
                   onChange={handleChange}
-                  placeholder="John Doe"
+                  placeholder="abc xyz"
                   className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
@@ -106,7 +107,7 @@ const AddressContact = () => {
                   name="phone"
                   value={address.phone || ''}
                   onChange={handleChange}
-                  placeholder="+1 234 567 8900"
+                  placeholder="234 567 8900"
                   className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
@@ -172,20 +173,16 @@ const AddressContact = () => {
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={loading}
-                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${loading
+                disabled={isUpdating}
+                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${isUpdating
                   ? 'bg-blue-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'}`}
               >
-                {loading ? 'Updating...' : 'Update Address'}
+                {isUpdating ? 'Updating...' : 'Update Address'}
               </button>
             </div>
 
-            {message && (
-              <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-300 text-sm">
-                {message}
-              </div>
-            )}
+          
           </form>
         </div>
       </div>

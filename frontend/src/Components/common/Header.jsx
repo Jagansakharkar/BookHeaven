@@ -33,7 +33,7 @@ const Header = () => {
   const guestLinks = [
     { title: "Home", link: "/" },
     { title: "Contact", link: "/contact" },
-    { title: "All Books", link: "/all-books" },
+    { title: "All Books", link: "/books" },
   ];
 
   const userLinks = [
@@ -56,7 +56,7 @@ const Header = () => {
   ];
 
   const adminLinks = [
-    { title: "All Books", link: "/all-books" },
+    { title: "All Books", link: "/books" },
     { title: "Dashboard", link: "/admin/dashboard" },
     {
       title: "Alerts",

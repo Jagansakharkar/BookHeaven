@@ -1,31 +1,28 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useSelector } from 'react-redux';
-
-export const useAddBook = () => {
-  return useMutation({
-    mutationFn: async (data) => {
-      const res = await axios.post(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/books`,
-        data,
-        { headers }
-      );
-      return res.data;
-    }
-  });
-};
 
 export const useBookById = (bookId) => {
   return useQuery({
     queryKey: ['book', bookId],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/books/${bookId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/books/${bookId}`,
       );
-      console.log("response",response)
       return response.data.data;
     },
-    // enabled: !!bookId
+    enabled: !!bookId
+  });
+};
+
+export const useAddBook = () => {
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/books`,
+        data,
+      );
+      return response.data;
+    }
   });
 };
 
@@ -33,9 +30,8 @@ export const useUpdateBook = () => {
   return useMutation({
     mutationFn: async ({ bookId, data }) => {
       const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/books/${bookId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/books/${bookId}`,
         data,
-        { headers }
       );
       return response.data;
     }
@@ -46,41 +42,37 @@ export const useDeleteBook = () => {
   return useMutation({
     mutationFn: async (bookId) => {
       const response = await axios.delete(
-        `${import.meta.env.REACT_APP_API_URL}/api/admin/books/${bookId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/admin/books/${bookId}`,
       );
       return response.data;
     }
   });
 };
 
-export const useBookFilter = (params) => {
-  return useQuery({
-    queryKey: ['bookFiltered', params],
-    queryFn: async () => {
+export const useBookFilter = () => {
+  return useMutation({
+    mutationFn: async (params) => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/books/books_filter`,
-        {
-          params
-        }
+        `${import.meta.env.VITE_BACKEND_URL}/api/books/filter`,
+        { params }
       );
-      return response.data;
+      return response.data.data;
     },
-    enabled: !!params
   });
 };
 
-export const useBookSearch = (query) => {
-  return useQuery({
-    queryKey: ['bookSearched', query],
-    queryFn: async () => {
+export const useBookSearch = () => {
+  return useMutation({
+    mutationFn: async (query) => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/books/search`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/books/search`,
         {
           params: { query: query.trim() }
         }
       );
-      return response.data;
+      console.log("book search:", response.data.data);
+
+      return response.data.data;
     },
-    enabled: !!query && query.trim().length > 0
   });
 };

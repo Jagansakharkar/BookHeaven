@@ -7,25 +7,27 @@ import { MdDeleteOutline } from "react-icons/md";
 import { useNavigate, Link } from 'react-router-dom';
 import { CiSearch, CiFilter } from "react-icons/ci";
 import { FiRefreshCw } from "react-icons/fi";
-import { useAllCustomers, useDeleteCustomer, useFilterByGender, useSearchUser } from '../../hooks/customers';
+import { useAllUsers, useDeleteUser, useFilterByGender, useSearchUser } from '../../hooks/customers';
 
 const Customers = () => {
+
   const navigate = useNavigate();
 
-  const [customers, setCustomers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [gender, setGender] = useState('all');
-  const { data: allCustomers, isLoading, isError, error } = useAllCustomers()
+  const { data: allUsers, isLoading, isError, error } = useAllUsers()
 
   useEffect(() => {
-    setCustomers(allCustomers)
-  }, [allCustomers])
-  const deleteCustomerMutation = useDeleteCustomer()
+    setUsers(allUsers || []);
+  }, [allUsers]);
+
+  const deleteUserMutation = useDeleteUser()
   const filterByGenderMutation = useFilterByGender()
   const searchUserMutation = useSearchUser()
 
   // Delete customer
-  const handleDelete = async () => {
+  const handleDelete = async (userId) => {
     const confirm = await Swal.fire({
       title: 'Are you sure?',
       text: 'This will delete the customer permanently.',
@@ -40,10 +42,10 @@ const Customers = () => {
 
     if (confirm.isConfirmed) {
       try {
-        deleteCustomerMutation.mutate(
+        deleteUserMutation.mutate(
           {
             onSuccess: (response) => {
-              setCustomers(customers.filter(c => c._id !== userId));
+              setUsers(users.filter(c => c._id !== userId));
               Swal.fire({
                 title: 'Deleted!',
                 text: 'Customer has been deleted.',
@@ -84,7 +86,7 @@ const Customers = () => {
     setGender(genderValue);
 
     if (genderValue === 'all') {
-      // fetchCustomers(); // Reset to full list
+      //  fetchUsers(); // Reset to full list
       return;
     }
 
@@ -92,7 +94,7 @@ const Customers = () => {
       filterByGenderMutation.mutate(genderValue)
       //   {
       //     onSuccess: (response) => {
-      //       setCustomers(response.data.data);
+      //       setusers(response.data.data);
       //     },
       //     onError: (response) => {
       //       Swal.fire({
@@ -116,7 +118,7 @@ const Customers = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(customer =>
+  const filteredUsers = users.filter(customer =>
     customer.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -251,8 +253,8 @@ const Customers = () => {
                       </div>
                     </td>
                   </tr>
-                ) : filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((customer) => (
+                ) : filteredUsers.length > 0 ? (
+                  filteredUsers.map((customer) => (
                     <tr key={customer._id} className="hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -275,7 +277,7 @@ const Customers = () => {
                         {customer.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                        {customer.ContactNumber || 'N/A'}
+                        {customer.address?.phone || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${customer.gender === 'male'

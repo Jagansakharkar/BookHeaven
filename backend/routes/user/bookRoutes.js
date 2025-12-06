@@ -5,10 +5,13 @@ const { getAllBooks, bookFilter, getBookById, search } = require('../../controll
 
 //get all books
 router.get('/',getAllBooks)
+
 //search books
 router.get('/search',search)
+
 // filter books
-router.get('/books_filter',bookFilter)
+router.get('/filter',bookFilter)
+
 // book by id
 router.get('/:bookId',getBookById)
 

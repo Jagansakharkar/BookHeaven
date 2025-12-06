@@ -43,8 +43,6 @@ const userId=req.user.id
       pincode
     } = req.body;
 
-    // Optional: validate fields here or use express-validator
-
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
@@ -69,6 +67,7 @@ const userId=req.user.id
       address: updatedUser.address
     });
   } catch (error) {
+    console.log("Error Updating Address:",error)
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -113,11 +112,12 @@ const userId=req.user.id
         avatar: updatedUser.avatar,
         birthDate: updatedUser.birthDate,
         gender: updatedUser.gender,
-        role: updatedUser.role,
+       
         address: updatedUser.address
       }
     });
   } catch (error) {
+    console.log("error updateing",error)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

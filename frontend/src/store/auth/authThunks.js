@@ -8,7 +8,6 @@ export const registerUser = createAsyncThunk(
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/auth/signup`,
         userData,
-        // send/receive cookies
       );
       return response.data;
     } catch (error) {
@@ -27,8 +26,9 @@ export const loginUser = createAsyncThunk(
         `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
         credentials,
       );
+      console.log("login error", response);
 
-      return response.data; // Backend should send { success, message }
+      return response.data;
     } catch (error) {
       const message = error.response?.data?.message;
       return thunkAPI.rejectWithValue(message);
@@ -45,6 +45,7 @@ export const getMe = createAsyncThunk(
         `${import.meta.env.VITE_BACKEND_URL}/api/auth/getMe`,
 
       );
+
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch user");

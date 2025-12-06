@@ -3,17 +3,16 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useParams, useNavigate } from 'react-router-dom';
 import BackButton from '../../Components/common/BackButton';
-import { useFetchCustomers, useUpdateCustomer } from '../../hooks/customers';
+import { useFetchUserById, useUpdateUser } from '../../hooks/customers';
 import { useUpdateBook } from '../../hooks/Book';
 import Loader from '../../Components/common/Loader';
-
 
 const EditCustomer = () => {
   const { customerId } = useParams();
   const navigate = useNavigate();
 
-  const { data: customer, isLoading, isError, error } = useFetchCustomers()
-  const updateCustomerMutation = useUpdateCustomer()
+  const { data: customer, isLoading, isError, error } = useFetchUserById(customerId)
+  const updateCustomerMutation = useUpdateUser()
   // const { mutate: updateCustomer } = useUpdateCustomer()
   if (isLoading) {
     return <Loader />
@@ -36,53 +35,32 @@ const EditCustomer = () => {
     }
   });
 
-  // useEffect(() => {
-  //   const fetchCustomers = async () => {
-  //     try {
-  //       fetchCustomer(customerid,
-  //         {
-  //           onSuccess: (response) => {
-  //             const formattedDate = response.BirthDate
-  //               ? new Date(data.BirthDate).toISOString().split('T')[0]
-  //               : '';
-  //             setCustomerData({
-  //               fullname: data.fullname || '',
-  //               username: data.username || '',
-  //               email: data.email || '',
-  //               password: '',
-  //               avatar: data.avatar || '',
-  //               role: data.role || 'user',
-  //               BirthDate: formattedDate,
-  //               gender: data.gender || '',
-  //               address: {
-  //                 phone: data.address?.phone || '',
-  //                 street: data.address?.street || '',
-  //                 city: data.address?.city || '',
-  //                 state: data.address?.state || '',
-  //                 pincode: data.address?.pincode || ''
-  //               }
-  //             });
-  //           },
-  //           onError: (response) => {
-  //             Swal.fire({
-  //               icon: 'error',
-  //               title: 'Failed to fetch customer',
-  //               text: err.message
-  //             });
-  //           }
-  //         }
-  //       )
-  //     } catch (err) {
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Failed to fetch customer',
-  //         text: err.message
-  //       });
-  //     }
-  //   };
+  useEffect(() => {
+    if (customer) {
+      const formattedDate = customer.BirthDate
+        ? new Date(customer.BirthDate).toISOString().split('T')[0]
+        : '';
 
-  //   fetchCustomers();
-  // }, [customerid, headers]);
+      setCustomerData({
+        fullname: customer.fullname || "",
+        username: customer.username || "",
+        email: customer.email || "",
+        password: "",
+        avatar: customer.avatar || "",
+        role: customer.role || "user",
+        BirthDate: formattedDate,
+        gender: customer.gender || "",
+        address: {
+          phone: customer.address?.phone || "",
+          street: customer.address?.street || "",
+          city: customer.address?.city || "",
+          state: customer.address?.state || "",
+          pincode: customer.address?.pincode || "",
+        },
+      });
+    }
+  }, [customer]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,15 +86,15 @@ const EditCustomer = () => {
     e.preventDefault();
     try {
 
-      updateCustomerMutation(customerId, customerData, {
+      updateCustomerMutation.mutate({ customerId, customerData }, {
         onSuccess: (response) => {
           Swal.fire({
-            icon: res.data.success ? 'success' : 'error',
-            text: res.data.message
+            icon: response.data.success ? 'success' : 'error',
+            text: response.data.message
           });
-          if (res.data.success) navigate(-1);
+          if (response.data.success) navigate(-1);
         },
-        onError: (response) => {
+        onError: (error) => {
           Swal.fire({ icon: 'error', text: error.message });
 
         }

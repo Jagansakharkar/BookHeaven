@@ -5,15 +5,12 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FiPackage, FiClock, FiCheckCircle, FiXCircle, FiDollarSign } from 'react-icons/fi';
 import { BsBoxSeam, BsCreditCard } from 'react-icons/bs';
-
-// Components
 import Loader from '../../Components/common/Loader';
 import BackButton from '../../Components/common/BackButton';
 import { useGetOrderHistory } from '../../hooks/Order';
 
 const UserOrderHistory = () => {
   const navigate = useNavigate();
-  // const [orders, setOrders] = useState(null);
   const { data, isLoading, isError, error } = useGetOrderHistory()
 
   const orders = data || [];
@@ -77,7 +74,7 @@ const UserOrderHistory = () => {
               You haven't placed any orders yet. Start shopping to see your order history here.
             </p>
             <button
-              onClick={() => navigate('/all-books')}
+              onClick={() => navigate('/books')}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
             >
               Browse Books

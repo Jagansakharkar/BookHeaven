@@ -11,10 +11,11 @@ exports.getAllCategories = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      data: category,
-    });
+   res.status(200).json({
+  success: true,
+  message: "Categories fetched successfully",
+  data: category,
+});
   } catch (error) {
     
     res.status(500).json({

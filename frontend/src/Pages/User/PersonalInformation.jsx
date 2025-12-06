@@ -6,11 +6,9 @@ import { useUpdateUserProfile } from '../../hooks/User';
 import BackButton from '../../Components/common/BackButton';
 
 const PersonalInformation = () => {
-  const { profile } = useOutletContext();
-  const [formData, setFormData] = useState(originalValue);
+  const { profileData } = useOutletContext();
   const [isEditing, setIsEditing] = useState(false);
-  // const { mutate: updateProfile, isLoading: isProfileUpdating } = useUpdateUserProfile();
-const updateProfileMutation=useUpdateUserProfile()
+  const updateProfileMutation = useUpdateUserProfile()
 
   const [originalValue, setOriginalValue] = useState({
     fullname: "",
@@ -20,23 +18,23 @@ const updateProfileMutation=useUpdateUserProfile()
     ContactNumber: "",
     BirthDate: ""
   });
-
+  const [formData, setFormData] = useState(originalValue);
 
   // Initialize form data from profile
   useEffect(() => {
-    if (profile) {
+    if (profileData) {
       const initialData = {
-        fullname: profile.fullname || "",
-        email: profile.email || "",
-        address: profile.address || "",
-        gender: profile.gender || "",
-        ContactNumber: profile.ContactNumber || "",
-        BirthDate: profile.BirthDate?.slice(0, 10) || ""
+        fullname: profileData.fullname || "",
+        email: profileData.email || "",
+        address: profileData.address.street || "",
+        gender: profileData.gender || "",
+        ContactNumber: profileData.address.phone || "",
+        BirthDate: profileData.BirthDate?.slice(0, 10) || ""
       };
       setFormData(initialData);
       setOriginalValue(initialData);
     }
-  }, [profile]);
+  }, [profileData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,6 +66,8 @@ const updateProfileMutation=useUpdateUserProfile()
     setFormData(originalValue);
     setIsEditing(false);
   };
+
+  console.log("formdata", formData);
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -128,9 +128,9 @@ const updateProfileMutation=useUpdateUserProfile()
               disabled={!isEditing}
             >
               <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
@@ -165,7 +165,7 @@ const updateProfileMutation=useUpdateUserProfile()
                 type="button"
                 onClick={handleSave}
                 className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-                disabled={isUpdating}
+                disabled={updateProfileMutation.isPending}
               >
                 {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
               </button>

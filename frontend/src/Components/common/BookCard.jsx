@@ -8,12 +8,10 @@ import { useSelector } from 'react-redux';
 const BookCard = ({ data, favourites }) => {
   const { isLoggedIn } = useSelector(state => state.auth)
   const bookId = data._id;
-  // const { mutate: removeFromFavourite, isLoading: isRemoveFavouriteLoading, isError: isRemoveFavouriteError, error: removeFavouriteError }
-  //   = useRemoveFromFravourite()
+
   const removeFromFavouriteMutation = useRemoveFromFravourite()
-  // const { mutate: addToFavourite, isLoading: isAddFavouriteLoading, isError: isAddFavouriteError, error: addFavouriteError }
-  // = useAddFavouriteBook()
   const addToFavouriteMutation = useAddFavouriteBook()
+
   const handleRemoveBook = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -91,7 +89,7 @@ const BookCard = ({ data, favourites }) => {
 
   const Wrapper = ({ children }) =>
     isLoggedIn ? (
-      <Link to={`/view-book-details/${data._id}`} className="block h-full">
+      <Link to={`/book-details/${bookId}`} className="block h-full">
         {children}
       </Link>
     ) : (
@@ -143,7 +141,6 @@ const BookCard = ({ data, favourites }) => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  // Add to cart functionality here
                 }}
               >
                 <FiShoppingCart size={18} />

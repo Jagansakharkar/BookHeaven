@@ -6,9 +6,9 @@ const { getUserById, updateUserAddress, updateProfile, getUserAddress } = requir
 // get particular user information
 router.get('/', authenticationToken , getUserById)
 // update user profile
-router.post('/profile',authenticationToken , updateProfile)
+router.put('/profile',authenticationToken , updateProfile)
 // update user address
-router.put('/address', authenticationToken , updateUserAddress)
+router.patch('/address', authenticationToken , updateUserAddress)
 // get user address
 router.get('/address', authenticationToken , getUserAddress)
 

@@ -7,18 +7,17 @@ import { fetchCategories } from '../../store/Categories/categoryThunks';
 import { FaBook, FaUserEdit, FaImage, FaLanguage, FaDollarSign, FaBoxOpen, FaCalendarAlt, FaFileAlt } from 'react-icons/fa';
 import Loader from '../../Components/common/Loader';
 
-// Reusable components
-import { InputField } from '../../Components/common/InputField';
-import { TextAreaField } from '../../Components/common/TextAreaField';
-import { SelectField } from '../../Components/common/SelectField';
+
+import InputField from '../../Components/common/InputField';
+import TextAreaField from '../../Components/common/TextAreaField';
+import SelectField from '../../Components/common/SelectField';
 import BackButton from '../../Components/common/BackButton';
 import { useAddBook } from '../../hooks/Book';
 
 const AddBook = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { categories,isLoading } = useSelector((state) => state.categories);
-  // const { mutate: addBook, isLoading, isError, error } = useAddBook()
+  const { categories, isLoading } = useSelector((state) => state.categories);
   const addBookMutation = useAddBook()
   const [Data, setData] = useState({
     url: "",
@@ -43,8 +42,8 @@ const AddBook = () => {
     setData({ ...Data, [name]: value });
   };
 
-  if(isLoading){
-    return <Loader/>
+  if (isLoading) {
+    return <Loader />
   }
   const handleBookSubmit = (e) => {
     e.preventDefault();
@@ -80,7 +79,7 @@ const AddBook = () => {
           language: "", stock: "", category: "", publisher: "",
           publishedDate: "", pages: ""
         });
-        setTimeout(() => navigate("/all-books"), 2000);
+        setTimeout(() => navigate("/books"), 2000);
       },
       onError: (error) => {
         Swal.fire({
@@ -233,7 +232,7 @@ const AddBook = () => {
               <button
                 type="submit"
                 disabled={addBookMutation.isPending}
-                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${loading
+                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${addBookMutation.isPending
                   ? 'bg-yellow-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-md hover:shadow-lg'
                   }`}

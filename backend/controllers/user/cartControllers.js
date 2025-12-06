@@ -1,13 +1,11 @@
-const router = require("express").Router();
 const Cart = require("../../models/cart");
 const Book = require("../../models/books");
 
-
-// Add book to cart (NO quantity increment)
+// Add book to cart 
 exports.addToCart = async (req, res) => {
   try {
     const { bookId } = req.params;
-    const userId=req.user.id
+    const userId = req.user.id;
 
     if (!bookId) {
       return res.status(400).json({ success: false, message: "Book ID is required" });
@@ -24,11 +22,13 @@ exports.addToCart = async (req, res) => {
     if (!cart) {
       cart = await Cart.create({
         user: userId,
-        books: [{
-          book: bookId,
-          quantity: 1,
-          priceAtAdded: book.price
-        }]
+        books: [
+          {
+            book: bookId,
+            quantity: 1,
+            priceAtAdded: book.price
+          }
+        ]
       });
 
       return res.status(201).json({ success: true, message: "Book added to new cart", data: cart });
@@ -57,33 +57,34 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-//  Remove book from cart
+// Remove book from cart
 exports.removeFromCart = async (req, res) => {
   try {
     const { bookId } = req.params;
-const userId=req.user.id
-    const cart = await Cart.findOne({ user: userId });
-    if (!cart) {
-      return res.status(404).json({ success: false, message: "Cart not found" });
-    }
+    const userId = req.user.id;
 
-    cart.books = cart.books.filter(book => book._id.toString() !== bookId);
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
+
+    cart.books = cart.books.filter(item => item.book.toString() !== bookId);
+
     await cart.save();
 
-    return res.status(200).json({ success: true, message: "Book removed from cart", data: cart });
+    return res.status(200).json({
+      success: true,
+      message: "Book removed from cart",
+      data: cart
+    });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
-}
+};
 
-//  Get user cart
+// Get user cart
 exports.getUserCart = async (req, res) => {
   try {
-const userId=req.user.id
-    // match with schema field name -> user
+    const userId = req.user.id;
     const cart = await Cart.findOne({ user: userId }).populate("books.book");
-
     if (!cart || cart.books.length === 0) {
       return res.status(200).json({
         success: true,
@@ -102,15 +103,61 @@ const userId=req.user.id
   }
 };
 
-
+// Clear cart
 exports.clearCart = async (req, res) => {
   try {
-const userId=req.user.id    
-await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
+    const userId = req.user.id;
+
+    await Cart.findOneAndUpdate(
+      { user: userId },
+      { $set: { books: [] } }
+    );
+
     res.status(200).json({ success: true, message: "Cart cleared" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to clear cart" });
   }
-}
+};
 
+// Update quantity
+exports.updateQuantity = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const { quantity } = req.body;
+    const userId = req.user.id;
 
+    console.log("updated quantity:",quantity)
+
+    if (!bookId) {
+      return res.status(400).json({ success: false, message: "BookId required" });
+    }
+
+    const newQty = Number(quantity);
+
+    if (newQty < 1) {
+      return res.status(400).json({ success: false, message: "Quantity must be at least 1" });
+    }
+
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
+
+    const item = cart.books.find(it => it.book.toString() === bookId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Book not found in cart" });
+    }
+
+    item.quantity = newQty;
+    await cart.save();
+
+    const populated = await Cart.findOne({ user: userId }).populate("books.book");
+
+    return res.status(200).json({
+      success: true,
+      message: "Quantity updated",
+      data: populated
+    });
+  } catch (error) {
+    console.log("Update quantity error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};

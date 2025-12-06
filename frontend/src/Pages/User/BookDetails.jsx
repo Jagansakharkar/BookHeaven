@@ -3,7 +3,6 @@ import Swal from 'sweetalert2';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 
 import Loader from '../../Components/common/Loader';
-// import { Reviews } from '../../Components/User/Reviews';
 import BackButton from '../../Components/common/BackButton';
 
 import { FaEdit, FaHeart, FaRegHeart, FaShoppingCart } from "react-icons/fa";
@@ -15,9 +14,9 @@ import { useAddToCart } from '../../hooks/Cart';
 import { useSelector } from 'react-redux';
 
 const BookDetails = () => {
+
   const { bookId } = useParams()
   const navigate = useNavigate();
-  // Proper use of hooks
   const { data: book, isLoading, error } = useBookById(bookId);
   const deleteBookMutation = useDeleteBook()
   const addToFavouriteMutation = useAddFavouriteBook()
@@ -25,8 +24,6 @@ const BookDetails = () => {
 
   const { role, isLoggedIn } = useSelector(state => state.auth)
 
-  // Derived state for favorite status
-  // const isFavorite = favoriteData?.isFavorite || false;
 
   const handleFavorite = async () => {
     addToFavouriteMutation.mutate(bookId, {
@@ -88,7 +85,7 @@ const BookDetails = () => {
             text: response.message,
             confirmButtonColor: '#3b82f6'
           });
-          navigate("/all-books");
+          navigate("/books");
         },
         onError: (error) => {
           Swal.fire({
@@ -101,9 +98,6 @@ const BookDetails = () => {
       });
     }
   };
-
-  // if (error) return <ErrorPage error={error} />;
-  // if (!book) return <NotFound />;
 
   if (isLoading) {
     return (
@@ -153,7 +147,6 @@ const BookDetails = () => {
                   )}
                 </div>
                 <div className="flex items-center text-yellow-400">
-                  {/* Star rating component would go here */}
                 </div>
               </div>
 

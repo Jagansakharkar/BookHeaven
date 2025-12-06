@@ -15,7 +15,6 @@ import {
 } from 'react-icons/fi';
 import { MdOutlineLocalShipping } from 'react-icons/md';
 
-// Components
 import Loader from '../../Components/common/Loader';
 import BackButton from '../../Components/common/BackButton';
 import { useTrackOrder } from '../../hooks/Order';
@@ -144,7 +143,7 @@ const TrackOrder = () => {
               </div>
               <div className="flex-1">
                 <Link
-                  to={`/view-book-details/${order.data.book._id}`}
+                  to={`/book-details/${order.data.book._id}`}
                   className="text-xl font-semibold text-gray-800 hover:text-indigo-600 transition-colors"
                 >
                   {order.data.book.title}

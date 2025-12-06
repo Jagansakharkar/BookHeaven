@@ -14,7 +14,7 @@ export const Hero = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 pt-2">
             <Link
-              to="/all-books"
+              to="/books"
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-center font-medium transition-all duration-300 hover:shadow-lg"
             >
               Browse Collection

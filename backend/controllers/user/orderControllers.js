@@ -48,7 +48,6 @@ const userId=req.user.id
   }
 }
 
-// controllers/orderController.js
 exports.trackOrder = async (req, res) => {
   const { orderId} = req.params;
 const userId=req.user.id
@@ -103,9 +102,10 @@ const userId=req.user.id
       .populate('books.book')
       .sort({ createdAt: -1 });
 
-    if (!orders.length) {
-      return res.status(404).json({ success: true, message: "No orders found for this user." });
-    }
+if (!orders.length) {
+  return res.status(200).json({ success: true, data: [] });
+}
+
 
     res.status(200).json({ success: true, data: orders });
   } catch (error) {

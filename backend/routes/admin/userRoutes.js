@@ -4,9 +4,9 @@ const router = express.Router()
 const { userSearch, filterByGender,deleteUser, getUserById, getAllUsers } = require('../../controllers/admin/userControllers')
 
 // get all users
-router.get("/",  authenticationToken, getAllUsers)
+router.get("/all",  authenticationToken, getAllUsers)
 // user by id
-router.get('/user',  authenticationToken, getUserById)
+router.get('/',  authenticationToken, getUserById)
 // search customer
 router.get('/search',  authenticationToken, userSearch)
 // filter by gender

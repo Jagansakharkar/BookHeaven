@@ -15,7 +15,7 @@ const authSlice = createSlice({
     logout(state) {
       state.isLoggedIn = false;
       state.role = null;
-      
+
       state.successMessage = null;
       axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`, {});
     },
@@ -57,7 +57,6 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(getMe.fulfilled, (state, action) => {
-
         state.loading = false;
         state.isLoggedIn = true;
         state.role = action.payload.user.role;

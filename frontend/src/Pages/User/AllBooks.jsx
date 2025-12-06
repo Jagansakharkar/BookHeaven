@@ -1,4 +1,3 @@
-// Code fixed without altering UI
 import axios from "axios";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Loader from "../../Components/common/Loader";
@@ -16,14 +15,16 @@ const AllBooks = () => {
   const dispatch = useDispatch();
   const [filteredPage, setFilteredPage] = useState(1);
   const limit = 12;
+
+  // get all books
   const { loading, currentPage, totalPages, books } = useSelector(
     (state) => state.book
   );
-
+  //get all categories
   const { categories, loading: catLoading } = useSelector(
     (state) => state.categories
   );
- 
+
   const [priceRange, setPriceRange] = useState(10000);
   const [filtered, setFiltered] = useState(null);
   const [search, setSearch] = useState("");
@@ -31,45 +32,42 @@ const AllBooks = () => {
   const [sortType, setSortType] = useState("all");
   const [error, setError] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  // const { mutate: filterBook } = useBookFilter()
-  const filterBookMutation=useBookFilter()
-  const bookSearchMutation=useBookSearch()
-  // const { mutate: bookSearch } = useBookSearch()
 
-  useEffect(() => {
-    dispatch(fetchBooks({ page: 1, limit: 12 }));
-    dispatch(fetchCategories());
-  }, []);
+  const filterBookMutation = useBookFilter()
+  const bookSearchMutation = useBookSearch()
+
+  // fetch categories and books when application lodes
+  // useEffect(() => {
+  //   dispatch(fetchBooks({ page: 1, limit: 12 }));
+  //   dispatch(fetchCategories());
+  // }, [dispatch, limit]);
 
   const applyFilters = useCallback(
-    async (cats, sort, max = priceRange, page = 1, limit = 12) => {
+    async (cats, sort, max = priceRange, page = 1, limitVal = limit) => {
       try {
         setError(null);
-        const params = new URLSearchParams();
-
-        if (cats.length > 0) {
-          params.append("categories", cats.join(","));
-        }
-
-        if (sort !== "all") params.append("sort", sort);
-        params.append("min", 0);
-        params.append("max", max);
-        params.append("page", page);
-        params.append("limit", limit);
+        const params = {
+          categories: cats.length ? cats.join(",") : undefined,
+          sort: sort !== "all" ? sort : undefined,
+          min: 0,
+          max,
+          page,
+          limit: limitVal
+        };
 
         filterBookMutation.mutate(params, {
           onSuccess: (response) => {
             setFiltered({
-              books: response.data,
+              books: response.books,
               currentPage: response.currentPage,
               totalPages: response.totalPages,
             });
           },
-          onError: (response) => {
+          onError: () => {
             setError("Failed to apply filters. Please try again.");
             setFiltered({ books: [], currentPage: 1, totalPages: 1 });
           }
-        })
+        });
 
       } catch (err) {
         setError("Failed to apply filters. Please try again.");
@@ -85,6 +83,11 @@ const AllBooks = () => {
   }, [filtered, books]);
 
   useEffect(() => {
+    if (search.trim()) {
+      return;
+    }
+    setFilteredPage(1)
+
     if (selected.length || sortType !== "all" || priceRange !== 10000) {
       applyFilters(selected, sortType, priceRange, filteredPage, limit);
     } else {
@@ -93,37 +96,40 @@ const AllBooks = () => {
   }, [selected, sortType, priceRange, filteredPage, applyFilters]);
 
   const debouncedSearch = useMemo(() => debounce(async (query) => {
-    if (!query.trim()) {
+    const q = String(query || "").trim()
+    if (!q) {
       setFiltered(null);
       return;
     }
     try {
-
-      bookSearchMutation.mutate(query,
-        {
-          onSuccess: (response) => {
-            setFiltered({ books: res.data, currentPage: 1, totalPages: 1 });
-          },
-          onError: (response) => {
-            setError("Failed to search books. Please try again.");
-            setFiltered({ books: [], currentPage: 1, totalPages: 1 });
-          }
+      bookSearchMutation.mutate(q, {
+        onSuccess: (response) => {
+          setFiltered({ books: response, currentPage: 1, totalPages: 1 });
+        },
+        onError: () => {
+          setError("Failed to search books. Please try again.");
+          setFiltered({ books: [], currentPage: 1, totalPages: 1 });
         }
-      )
+      });
+
     } catch (err) {
       setError("Failed to search books. Please try again.");
       setFiltered({ books: [], currentPage: 1, totalPages: 1 });
     }
   }, 500), []);
 
+  //cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
   const toggleCategory = useCallback((categoryId) => {
     setSelected((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
+      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId]
     );
   }, []);
-
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -142,15 +148,25 @@ const AllBooks = () => {
     setSearch("");
     setPriceRange(10000);
     setError(null);
+
+    dispatch(fetchBooks({ page: 1, limit }))
+    dispatch(setPage(1))
   };
 
   const handlePrev = () => {
+    if (search.trim()) {
+      return;
+    }
+
     if (filtered && filtered.currentPage > 1) setFilteredPage(p => p - 1);
     else if (!filtered && currentPage > 1) dispatch(setPage(currentPage - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNext = () => {
+    if (search.trim()) {
+      return;
+    }
     if (filtered && filtered.currentPage < filtered.totalPages) setFilteredPage(p => p + 1);
     else if (!filtered && currentPage < totalPages) dispatch(setPage(currentPage + 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -11,7 +11,8 @@ const Setting = () => {
   const [activeTab, setActiveTab] = useState('personal-info');
   const { data: profileData, isLoading, isError, error } = useGetUserInfo();
 
-  // Handle error state
+  console.log("profile data:", profileData);
+
   if (isError) {
     Swal.fire({
       icon: 'error',
@@ -19,14 +20,14 @@ const Setting = () => {
       text: error?.message || 'Failed to load profile data',
       confirmButtonColor: '#3b82f6'
     });
-    navigate('/profile'); // Redirect back to profile on error
+    navigate('/profile');
     return null;
   }
 
   if (isLoading) {
     return (
       <div >
-        <Loader  />
+        <Loader />
       </div>
     );
   }
@@ -57,11 +58,10 @@ const Setting = () => {
               <Link
                 key={tab.id}
                 to={tab.id}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === tab.id 
-                    ? 'bg-blue-600 text-white' 
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === tab.id
+                    ? 'bg-blue-600 text-white'
                     : 'text-zinc-300 hover:bg-zinc-700'
-                }`}
+                  }`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}

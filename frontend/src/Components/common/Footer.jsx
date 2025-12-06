@@ -38,7 +38,7 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-white mb-4 uppercase tracking-wider">Explore</h3>
             <ul className="space-y-3">
               <li><a href="/" className="text-gray-400 hover:text-indigo-400 transition-colors">Home</a></li>
-              <li><a href="/all-books" className="text-gray-400 hover:text-indigo-400 transition-colors">Browse Books</a></li>
+              <li><a href="/books" className="text-gray-400 hover:text-indigo-400 transition-colors">Browse Books</a></li>
               <li><a href="/new-releases" className="text-gray-400 hover:text-indigo-400 transition-colors">New Releases</a></li>
               <li><a href="/best-sellers" className="text-gray-400 hover:text-indigo-400 transition-colors">Best Sellers</a></li>
               <li><a href="/genres" className="text-gray-400 hover:text-indigo-400 transition-colors">Genres</a></li>

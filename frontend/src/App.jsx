@@ -139,6 +139,7 @@ import { fetchBooks } from './store/books/authBooks';
 import { fetchCart } from './store/Cart/cartThunks';
 import { fetchAlertBooks } from './store/books/booksAlertThunks';
 import { fetchCategories } from './store/categories/categoryThunks';
+
 import { getMe } from './store/auth/authThunks';
 function App() {
   const dispatch = useDispatch()
@@ -159,7 +160,7 @@ function App() {
       <Header />
       <Routes>
         <Route exact path='/' element={<Home />} />
-        <Route path='/all-books' element={<AllBooks />} />
+        <Route path='/books' element={<AllBooks />} />
         <Route path='/logIn' element={<Login />} />
         <Route path='/signUp' element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -175,7 +176,7 @@ function App() {
           <ProtectedRoute><Cart /></ProtectedRoute>} />
 
         {/* <Route path='/all-orders' element={<AllOrders />} /> */}
-        <Route path='/view-book-details/:bookId' element={<BookDetails />} />
+        <Route path='/book-details/:bookId' element={<BookDetails />} />
         <Route path='/address-confirmation' element={<ProtectedRoute><AddressConfirmation /></ProtectedRoute>} />
 
         {role === 'user' &&
@@ -208,6 +209,7 @@ function App() {
           <Route path="edit-book/:bookId" element={<EditBook />} />
           <Route path="add-categories" element={<AddCategory />} />
           <Route path='edit-customer/:userId' element={<EditCustomer />} />
+
         </Route>
 
         {/* Not found route */}

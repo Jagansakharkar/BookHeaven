@@ -13,13 +13,14 @@ const EditBook = () => {
   const { bookId } = useParams();
   const [bookData, setBookData] = useState(null);
 
-  const { categories, isLoading } = useSelector(state => state.categories);
-  const { data: book, isLoading: isFetchBookLoading, isError, error } = useBookById(bookId)
+  const { categories, isLoading: isCategoryLoading } = useSelector(state => state.categories);
+  const { isLoading, currentPage, totalPages, books } = useSelector(
+    (state) => state.book
+  ); const book = books?.find(b => b._id === bookId);
+
   useEffect(() => {
-    if (bookData) {
-      setBook(book);   // update local state from API data
-    }
-  }, [bookId, book]);
+    if (book) setBookData(book);
+  }, [book]);
 
   const updateBookMutation = useUpdateBook()
   if (isLoading) {
@@ -47,7 +48,7 @@ const EditBook = () => {
 
     try {
 
-      updateBookMutation.mutate(bookId, bookData, {
+      updateBookMutation.mutate({ bookId, bookData }, {
         onSuccess: (response) => {
           Swal.fire({
             icon: 'success',
@@ -79,7 +80,7 @@ const EditBook = () => {
     }
   };
 
-  if (!isFetchBookLoading) {
+  if (isLoading || !bookData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-900">
         <Loader />
@@ -167,12 +168,12 @@ const EditBook = () => {
               <button
                 type="submit"
                 disabled={updateBookMutation.isPending}
-                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${updating
+                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 ${updateBookMutation.isPending
                   ? 'bg-blue-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg'
                   }`}
               >
-                {updatingMutation.isPending ? (
+                {updateBookMutation.isPending ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

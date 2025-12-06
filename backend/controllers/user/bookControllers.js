@@ -97,7 +97,6 @@ exports.getBookById = async (req, res) => {
     const { bookId } = req.params;
     const book = await Book.findById(bookId);
 
-console.log("booksdata",book)
     res.status(200).json({ success: true, data: book });
   } catch (error) {
     res.status(500).json({ success: false, message: "An error occurred" });

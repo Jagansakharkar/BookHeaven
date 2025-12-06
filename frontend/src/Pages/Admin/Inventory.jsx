@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import Swal from 'sweetalert2';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEdit, FaBoxOpen, FaBook, FaExclamationTriangle } from "react-icons/fa";
@@ -18,30 +17,19 @@ import Loader from '../../Components/common/Loader';
 const Inventory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { books, currentPage, totalPages, isLoading } = useSelector(state => state.book);
-
+  const { isLoading, currentPage, totalPages, books } = useSelector(
+    (state) => state.book
+  );
   if (isLoading) {
     return <Loader />
   }
   const [search, setSearch] = useState('');
-  // const [isLoading, setIsLoading] = useState(false);
-  const [inventorySummary, setInventorySummary] = useState({
-    totalBooks: 0,
-    bookCategories: 0,
-    lowStock: 0,
-  });
 
-  useEffect(() => {
-    dispatch(fetchBooks({ page: currentPage, limit: 8 }));
-  }, [dispatch, currentPage]);
-
-  const { data: getInventorySummary, isLoading: isInventorySummaryLoading } = useInventorySummary()
-  // const { mutate: deleteBook, isLoading: isDeleteLoading } = useDeleteBook()
-
+  // const { data: inventory, isLoading: isInventoryLoading } = useInventorySummary()
   const deleteBookMutation = useDeleteBook()
   // const fetchInventorySummary = async () => {
   //   try {
-  //     getInventorySummary({
+  //     inventory({
   //       onSuccess: (response) => {
   //         setInventorySummary(response.data);
   //       },
@@ -71,27 +59,26 @@ const Inventory = () => {
   // }, []);
 
   const handleSearch = async () => {
-    if (!search.trim()) {
-      dispatch(fetchBooks({ page: 1, limit: 8 }));
-      return;
-    }
-    try {
-      ;
-      const res = await axios.get(`http://localhost:3000/api/admin/books/book/search?title=${search}`, { headers });
-      dispatch({ type: 'book/setBooks', payload: { books: res.data.data, pagination: { currentPage: 1, totalPages: 1 } } })
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        text: 'Failed to search books',
-        background: '#1f2937',
-        color: '#fff',
-        confirmButtonColor: '#3b82f6'
-      });
-    }
+    // if (!search.trim()) {
+    //   dispatch(fetchBooks({ page: 1, limit: 8 }));
+    //   return;
+    // }
+    // try {
+    //   ;
+    //   const res = await axios.get(`http://localhost:3000/api/admin/books/book/search?title=${search}`, { headers });
+    //   dispatch({ type: 'book/setBooks', payload: { books: res.data.data, pagination: { currentPage: 1, totalPages: 1 } } })
+    // } catch (error) {
+    //   Swal.fire({
+    //     icon: 'error',
+    //     text: 'Failed to search books',
+    //     background: '#1f2937',
+    //     color: '#fff',
+    //     confirmButtonColor: '#3b82f6'
+    //   });
+    // }
   };
 
   const handlebookEdit = (bookId) => {
-    alert(bookId)
     navigate(`/admin/dashboard/edit-book/${bookId}`);
   };
 
@@ -111,16 +98,16 @@ const Inventory = () => {
     if (confirm.isConfirmed) {
       try {
         deleteBookMutation.mutate(bookId, {
-          onSuccess: (response) => {
+          onSuccess: (data) => {
             Swal.fire({
               title: 'Deleted!',
-              text: res.data.message,
+              text: data.message,
               icon: 'success',
               background: '#1f2937',
               color: '#fff',
               confirmButtonColor: '#3b82f6'
             });
-            dispatch(removeBook(bookid));
+            dispatch(removeBook(bookId));
 
             if (books.length === 1 && currentPage > 1) {
               dispatch(setPage(currentPage - 1));
@@ -129,10 +116,10 @@ const Inventory = () => {
               dispatch(fetchBooks({ page: currentPage, limit: 8 }));
             }
           },
-          onError: (response) => {
+          onError: (error) => {
             Swal.fire({
               title: 'Error',
-              text: response.message,
+              text: error.message,
               icon: 'error',
               background: '#1f2937',
               color: '#fff',
@@ -193,7 +180,7 @@ const Inventory = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-lg font-semibold">Total Books</div>
-                <div className="text-3xl font-bold">{inventorySummary.totalBooks}</div>
+                {/* <div className="text-3xl font-bold">{inventory.totalBooks}</div> */}
               </div>
               <FaBook className="text-4xl opacity-50" />
             </div>
@@ -202,7 +189,7 @@ const Inventory = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-lg font-semibold">Total Categories</div>
-                <div className="text-3xl font-bold">{inventorySummary.bookCategories}</div>
+                {/* <div className="text-3xl font-bold">{inventory.bookCategories}</div> */}
               </div>
               <FaBoxOpen className="text-4xl opacity-50" />
             </div>
@@ -211,7 +198,7 @@ const Inventory = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-lg font-semibold">Low Stock</div>
-                <div className="text-3xl font-bold">{inventorySummary.lowStock}</div>
+                {/* <div className="text-3xl font-bold">{inventory.lowStock}</div> */}
               </div>
               <FaExclamationTriangle className="text-4xl opacity-50" />
             </div>
@@ -232,7 +219,7 @@ const Inventory = () => {
                 <input
                   id="search"
                   type="text"
-                  placeholder="Search by title, author, ISBN..."
+                  placeholder="Search by title, author"
                   className="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-700 dark:text-white"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

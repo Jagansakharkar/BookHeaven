@@ -2,12 +2,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 export const useGetUserAddress = () => {
-
   return useQuery({
     queryKey: ['user-address'],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/user/address`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/address`,
       );
       return response.data.data;
     },
@@ -16,12 +15,11 @@ export const useGetUserAddress = () => {
 };
 
 export const useGetUserInfo = () => {
-
   return useQuery({
     queryKey: ['user-info'],
     queryFn: async () => {
       const response = await axios.get(
-        `${import.meta.env.REACT_APP_API_URL}/api/user`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/user`,
       );
       return response.data.data;
     },
@@ -30,13 +28,15 @@ export const useGetUserInfo = () => {
 };
 
 export const useUpdateUserProfile = () => {
-
   return useMutation({
     mutationFn: async (updateData) => {
+
       const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_URL}/api/user/profile`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/profile`,
         updateData,
       );
+      console.log("update user profile:", response);
+
       return response.data;
     }
   });
@@ -45,10 +45,13 @@ export const useUpdateUserProfile = () => {
 export const useUpdateUserAddress = () => {
   return useMutation({
     mutationFn: async (updateAddress) => {
-      const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_URL}/api/user/address`,
+      alert("I am called")
+
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/address`,
         updateAddress,
       );
+      console.log("update address:", response);
       return response.data;
     }
   })

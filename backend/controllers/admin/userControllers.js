@@ -1,26 +1,24 @@
 const router = require('express').Router();
 const User = require("../../models/user");
 
-// Fetch all customers 
+// Fetch all users
 exports.getAllUsers = async (req, res) => {
   try {
     const allUsers = await User.find({ role: 'user' });
-console.log("allusers",allUsers)
     res.status(200).json({ success: true, data: allUsers });
   } catch (error) {
-    console.error("Error fetching users:", error);
     res.status(500).json({ success: false, message: "Failed to fetch customers" });
   }
 }
 
+// fetch user by id
 exports.getUserById = async (req, res) => {
-const userId=req.user.id
+const {userId}=req.query
   try {
-    const user = await User.find({ _id: userId })
+    const user = await User.findById(userId)
     if (!user) {
       res.status(403).json({ success: true, message: "User Not Found" })
-    }
-
+    } 
     res.status(200).json({ success: true, data: customer })
   }
   catch (error) {

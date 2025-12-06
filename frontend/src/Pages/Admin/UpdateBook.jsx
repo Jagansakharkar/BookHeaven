@@ -7,8 +7,8 @@ import { FaBook, FaUserEdit, FaImage, FaLanguage, FaDollarSign, FaArrowLeft, FaS
 
 // Components
 import BackButton from '../../Components/common/BackButton';
-import { InputField } from '../../Components/common/InputField';
-import { TextAreaField } from '../../Components/common/TextAreaField';
+import InputField from '../../Components/common/InputField';
+import TextAreaField from '../../Components/common/TextAreaField';
 import { useBookById, useUpdateBook } from '../../hooks/Book';
 import Loader from '../../Components/common/Loader';
 
@@ -18,7 +18,7 @@ const UpdateBook = () => {
 
   const { mutate: bookById, isLoading } = useBookById()
   // const { mutate: updateBook, isLoading: isUpdateLoading } = useUpdateBook()
-const updateBookMutation=useUpdateBook()
+  const updateBookMutation = useUpdateBook()
   const [Data, setData] = useState({
     url: '',
     title: '',
@@ -100,7 +100,7 @@ const updateBookMutation=useUpdateBook()
             color: '#fff',
             confirmButtonColor: '#3b82f6'
           });
-          setTimeout(() => navigate('/all-books'), 2000);
+          setTimeout(() => navigate('/books'), 2000);
         }
       })
 
@@ -117,7 +117,7 @@ const updateBookMutation=useUpdateBook()
   };
   if (isLoading && !Data.title) {
     return (
-   <Loader/>
+      <Loader />
     );
   }
 
@@ -247,7 +247,7 @@ const updateBookMutation=useUpdateBook()
             <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6">
               <button
                 type="button"
-                onClick={() => navigate(`/view-book-details/${bookId}`)}
+                onClick={() => navigate(`/book-details/${bookId}`)}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg transition-colors"
               >
                 <FaTimes />
@@ -261,7 +261,7 @@ const updateBookMutation=useUpdateBook()
                   : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
                   }`}
               >
-                {updateBookMutation.isPending? (
+                {updateBookMutation.isPending ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
